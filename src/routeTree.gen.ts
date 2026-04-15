@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyRequestsRouteImport } from './routes/my-requests'
+import { Route as MapRouteImport } from './routes/map'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RequestsIndexRouteImport } from './routes/requests.index'
@@ -31,6 +32,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const MyRequestsRoute = MyRequestsRouteImport.update({
   id: '/my-requests',
   path: '/my-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -62,6 +68,7 @@ const RequestsIdRoute = RequestsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/my-requests': typeof MyRequestsRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/my-requests': typeof MyRequestsRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/my-requests': typeof MyRequestsRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/map'
     | '/my-requests'
     | '/profile'
     | '/register'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/map'
     | '/my-requests'
     | '/profile'
     | '/register'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/map'
     | '/my-requests'
     | '/profile'
     | '/register'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  MapRoute: typeof MapRoute
   MyRequestsRoute: typeof MyRequestsRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/my-requests'
       fullPath: '/my-requests'
       preLoaderRoute: typeof MyRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -198,6 +218,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  MapRoute: MapRoute,
   MyRequestsRoute: MyRequestsRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
