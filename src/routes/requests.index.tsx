@@ -28,7 +28,7 @@ const KAZAKHSTAN_CITIES = [
 const CITY_STORAGE_KEY = "fixadeal_priority_city";
 const CITY_CHOSEN_KEY = "fixadeal_city_chosen";
 
-export const Route = createFileRoute("/requests")({
+export const Route = createFileRoute("/requests/")({
   component: RequestsPage,
   head: () => ({
     meta: [
