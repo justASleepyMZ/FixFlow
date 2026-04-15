@@ -25,6 +25,9 @@ export const useAuth = () => {
 
 const SESSION_DURATION_MS = 60 * 60 * 1000;
 
+// Helper to bypass strict Supabase typing when tables aren't in the generated types yet
+const db = supabase as any;
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -35,12 +38,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserData = async (userId: string) => {
     const [profileRes, roleRes, companyRes] = await Promise.all([
-      supabase.from("profiles").select("display_name, avatar_url, phone").eq("user_id", userId).single(),
-      supabase.from("user_roles").select("role").eq("user_id", userId).single(),
-      supabase.from("company_profiles").select("company_name, company_description, company_address, tax_id, website").eq("user_id", userId).maybeSingle(),
+      db.from("profiles").select("display_name, avatar_url, phone").eq("user_id", userId).single(),
+      db.from("user_roles").select("role").eq("user_id", userId).single(),
+      db.from("company_profiles").select("company_name, company_description, company_address, tax_id, website").eq("user_id", userId).maybeSingle(),
     ]);
     setProfile(profileRes.data as Profile | null);
-    setUserRole((roleRes.data as { role: AppRole } | null)?.role ?? null);
+    setUserRole(roleRes.data?.role ?? null);
     setCompanyProfile(companyRes.data as CompanyProfile | null);
   };
 
@@ -113,18 +116,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = data.user?.id;
     if (!userId) return { error: new Error("Signup failed") };
 
-    await supabase.from("profiles").update({ phone } as Record<string, unknown>).eq("user_id", userId);
-    await supabase.from("user_roles").insert({ user_id: userId, role } as Record<string, unknown>);
+    await db.from("profiles").update({ phone }).eq("user_id", userId);
+    await db.from("user_roles").insert({ user_id: userId, role });
 
     if (role === "company" && companyData?.company_name) {
-      await supabase.from("company_profiles").insert({
+      await db.from("company_profiles").insert({
         user_id: userId,
         company_name: companyData.company_name,
         company_description: companyData.company_description ?? null,
         company_address: companyData.company_address ?? null,
         tax_id: companyData.tax_id ?? null,
         website: companyData.website ?? null,
-      } as Record<string, unknown>);
+      });
     }
 
     if (typeof window !== "undefined") {
