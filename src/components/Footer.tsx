@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { Wrench } from "lucide-react";
 
 const Footer = () => {
@@ -22,7 +22,7 @@ const Footer = () => {
             <h4 className="mb-3 font-display text-sm font-semibold">Platform</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/requests" className="hover:text-foreground transition-colors">Browse Requests</Link></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">How It Works</a></li>
+              <li><Link to="/how-it-works" className="hover:text-foreground transition-colors">How It Works</Link></li>
               <li><Link to="/register" className="hover:text-foreground transition-colors">Become a Worker</Link></li>
             </ul>
           </div>
