@@ -32,8 +32,8 @@ const Requests = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [priorityCity, setPriorityCity] = useState<string | null>(() => localStorage.getItem(CITY_STORAGE_KEY));
-  const [cityChosen, setCityChosen] = useState(() => localStorage.getItem(CITY_CHOSEN_KEY) === "true");
+  const [priorityCity, setPriorityCity] = useState<string | null>(null);
+  const [cityChosen, setCityChosen] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const { effectiveRole } = useRole();
   const { user } = useAuth();
@@ -41,6 +41,12 @@ const Requests = () => {
   const [loading, setLoading] = useState(true);
   const [cities, setCities] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setPriorityCity(localStorage.getItem(CITY_STORAGE_KEY));
+    setCityChosen(localStorage.getItem(CITY_CHOSEN_KEY) === "true");
+  }, []);
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -55,11 +61,9 @@ const Requests = () => {
         return;
       }
 
-      // Extract unique cities
       const uniqueCities = [...new Set((data || []).map((r: any) => r.city).filter(Boolean))] as string[];
       setCities(uniqueCities);
 
-      // Fetch poster average ratings
       const userIds = [...new Set((data || []).map((r: any) => r.user_id))];
       const { data: ratingsData } = await db
         .from("ratings")
@@ -113,7 +117,6 @@ const Requests = () => {
     return matchesSearch && matchesCategory && matchesCity && matchesRating;
   });
 
-  // Sort by priority city: matching city first, then the rest
   const sorted = priorityCity
     ? [...filtered].sort((a, b) => {
         const aMatch = a.city.toLowerCase() === priorityCity.toLowerCase() ? 0 : 1;
@@ -131,21 +134,27 @@ const Requests = () => {
   const handleCitySelect = (city: string) => {
     setPriorityCity(city);
     setCityChosen(true);
-    localStorage.setItem(CITY_STORAGE_KEY, city);
-    localStorage.setItem(CITY_CHOSEN_KEY, "true");
+    if (typeof window !== "undefined") {
+      localStorage.setItem(CITY_STORAGE_KEY, city);
+      localStorage.setItem(CITY_CHOSEN_KEY, "true");
+    }
   };
 
   const handleSkipCity = () => {
     setPriorityCity(null);
     setCityChosen(true);
-    localStorage.removeItem(CITY_STORAGE_KEY);
-    localStorage.setItem(CITY_CHOSEN_KEY, "true");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(CITY_STORAGE_KEY);
+      localStorage.setItem(CITY_CHOSEN_KEY, "true");
+    }
   };
 
   const handleChangeCity = () => {
     setCityChosen(false);
-    localStorage.removeItem(CITY_CHOSEN_KEY);
-    localStorage.removeItem(CITY_STORAGE_KEY);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(CITY_CHOSEN_KEY);
+      localStorage.removeItem(CITY_STORAGE_KEY);
+    }
   };
 
   // City picker overlay
