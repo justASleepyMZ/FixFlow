@@ -120,6 +120,7 @@ const Register = () => {
             <div>
               <Label htmlFor="password">Password *</Label>
               <Input id="password" type="password" placeholder="••••••••" className="mt-1" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <p className="mt-1 text-xs text-muted-foreground">Min 8 chars, must include upper & lowercase + a number. Avoid common passwords.</p>
             </div>
 
             {/* Company-specific fields */}
