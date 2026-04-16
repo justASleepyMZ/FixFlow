@@ -1,30 +1,21 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Wrench, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/login")({
-  component: LoginPage,
-  head: () => ({
-    meta: [
-      { title: "Sign In — FixFlow" },
-      { name: "description", content: "Sign in to your FixFlow account" },
-    ],
-  }),
-});
-
-function LoginPage() {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { signIn } = useAuth();
-  const navigate = Route.useNavigate();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,4 +71,8 @@ function LoginPage() {
       <Footer />
     </div>
   );
-}
+};
+
+
+
+export const Route = createFileRoute("/login")({ component: Login });

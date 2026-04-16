@@ -8,8 +8,6 @@ import { Send, Loader2, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { filterSensitiveContent, containsSensitiveContent } from "@/lib/contentFilter";
 
-const db = supabase as any;
-
 interface Message {
   id: string;
   sender_id: string;
@@ -21,6 +19,8 @@ interface OfferChatProps {
   offerId: string;
   otherUserName: string;
 }
+
+const db = supabase as any;
 
 const OfferChat = ({ offerId, otherUserName }: OfferChatProps) => {
   const { user } = useAuth();
@@ -49,9 +49,9 @@ const OfferChat = ({ offerId, otherUserName }: OfferChatProps) => {
     const channel = supabase
       .channel(`chat-${offerId}`)
       .on(
-        "postgres_changes" as any,
+        "postgres_changes",
         { event: "INSERT", schema: "public", table: "chat_messages", filter: `offer_id=eq.${offerId}` },
-        (payload: any) => {
+        (payload) => {
           setMessages((prev) => [...prev, payload.new as Message]);
         }
       )
@@ -109,9 +109,9 @@ const OfferChat = ({ offerId, otherUserName }: OfferChatProps) => {
       </div>
 
       <ScrollArea className="flex-1 px-4 py-3">
-        <div className="mb-3 mx-auto max-w-[90%] rounded-lg bg-accent border border-border px-3 py-2 text-center text-xs text-accent-foreground">
+        <div className="mb-3 mx-auto max-w-[90%] rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2 text-center text-xs text-amber-700 dark:text-amber-400">
           <ShieldAlert className="inline h-3 w-3 mr-1" />
-          For your safety, phone numbers, emails, links and other personal data are automatically masked.
+          For your safety, phone numbers, emails, links and other personal data are automatically masked. Keep communication within the platform.
         </div>
 
         {messages.length === 0 && (

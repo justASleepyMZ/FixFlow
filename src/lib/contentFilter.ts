@@ -1,3 +1,4 @@
+// Patterns for sensitive information that should be masked in chat
 const PHONE_REGEX = /(\+?\d[\d\s\-()]{6,}\d)/g;
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const CARD_REGEX = /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g;
@@ -17,12 +18,12 @@ export function filterSensitiveContent(text: string): FilterResult {
   let hasSensitiveContent = false;
 
   const patterns = [
-    { regex: CARD_REGEX },
-    { regex: EMAIL_REGEX },
-    { regex: PHONE_REGEX },
-    { regex: URL_REGEX },
-    { regex: TELEGRAM_REGEX },
-    { regex: WHATSAPP_REGEX },
+    { regex: CARD_REGEX, label: "card" },
+    { regex: EMAIL_REGEX, label: "email" },
+    { regex: PHONE_REGEX, label: "phone" },
+    { regex: URL_REGEX, label: "url" },
+    { regex: TELEGRAM_REGEX, label: "telegram" },
+    { regex: WHATSAPP_REGEX, label: "whatsapp" },
   ];
 
   for (const { regex } of patterns) {

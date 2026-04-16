@@ -1,7 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+const db = supabase as any;
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -12,18 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Building2, HardHat, ShieldCheck, Save, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-
-const db = supabase as any;
-
-export const Route = createFileRoute("/profile")({
-  component: ProfilePage,
-  head: () => ({
-    meta: [
-      { title: "Profile — FixFlow" },
-    ],
-  }),
-});
+import { useToast } from "@/hooks/use-toast";
 
 const roleIcons: Record<string, React.ElementType> = {
   user: User,
@@ -39,9 +30,10 @@ const roleLabels: Record<string, string> = {
   admin: "Admin",
 };
 
-function ProfilePage() {
+const Profile = () => {
   const { user, profile, companyProfile, userRole, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
@@ -53,7 +45,9 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate({ to: "/login" });
+    if (!authLoading && !user) {
+      navigate({ to: "/login" });
+    }
   }, [authLoading, user, navigate]);
 
   useEffect(() => {
@@ -75,7 +69,7 @@ function ProfilePage() {
     setSaving(true);
 
     try {
-      const { error: profileError } = await db
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({ display_name: displayName, phone })
         .eq("user_id", user.id);
@@ -83,7 +77,7 @@ function ProfilePage() {
       if (profileError) throw profileError;
 
       if (userRole === "company" && companyProfile) {
-        const { error: companyError } = await db
+        const { error: companyError } = await supabase
           .from("company_profiles")
           .update({
             company_name: companyName,
@@ -97,9 +91,9 @@ function ProfilePage() {
         if (companyError) throw companyError;
       }
 
-      toast.success("Profile updated");
+      toast({ title: "Profile updated", description: "Your changes have been saved." });
     } catch (err: any) {
-      toast.error(err.message);
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -123,6 +117,7 @@ function ProfilePage() {
     <div className="min-h-screen bg-gradient-surface">
       <Navbar />
       <div className="container max-w-2xl py-10">
+        {/* Header */}
         <div className="mb-8 flex items-center gap-4">
           <Avatar className="h-16 w-16">
             <AvatarImage src={profile?.avatar_url ?? undefined} />
@@ -140,6 +135,7 @@ function ProfilePage() {
           </div>
         </div>
 
+        {/* Personal Info */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
@@ -161,6 +157,7 @@ function ProfilePage() {
           </CardContent>
         </Card>
 
+        {/* Company Info (only for company role) */}
         {userRole === "company" && (
           <Card className="mb-6">
             <CardHeader>
@@ -202,4 +199,8 @@ function ProfilePage() {
       <Footer />
     </div>
   );
-}
+};
+
+
+
+export const Route = createFileRoute("/profile")({ component: Profile });

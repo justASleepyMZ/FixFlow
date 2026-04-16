@@ -23,6 +23,7 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<GuestRole>(null);
   const { user, userRole } = useAuth();
 
+  // When user is authenticated, sync guest role with their actual role
   useEffect(() => {
     if (user && userRole) {
       setRole(userRole);

@@ -1,34 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, type EasingDefinition } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ServiceRequestCard from "@/components/ServiceRequestCard";
 import { mockRequests, categories } from "@/data/mockData";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Shield, MessageSquare, Star } from "lucide-react";
+import { ArrowRight, Shield, MessageSquare, Star, CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-export const Route = createFileRoute("/")({
-  component: Index,
-  head: () => ({
-    meta: [
-      { title: "FixFlow — Find Repair Pros at Your Price" },
-      { name: "description", content: "Post your repair or maintenance request, get competitive offers from verified workers, and negotiate the best price." },
-    ],
-  }),
-});
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" },
+    transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" as EasingDefinition },
   }),
 };
 
-function Index() {
+const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-surface">
       <Navbar />
@@ -85,8 +75,7 @@ function Index() {
               custom={i * 0.5}
             >
               <Link
-                to="/requests"
-                search={{ category: cat.name }}
+                to={`/requests?category=${cat.name}`}
                 className="flex flex-col items-center gap-2 rounded-xl border bg-card p-4 shadow-card transition-all hover:shadow-card-hover hover:-translate-y-0.5"
               >
                 <span className="text-2xl">{cat.icon}</span>
@@ -219,4 +208,8 @@ function Index() {
       <Footer />
     </div>
   );
-}
+};
+
+
+
+export const Route = createFileRoute("/")({ component: Index });

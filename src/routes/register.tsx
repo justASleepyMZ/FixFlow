@@ -1,25 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Wrench, Loader2, User, HardHat, Building2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import type { AppRole } from "@/types/database";
 
-export const Route = createFileRoute("/register")({
-  component: RegisterPage,
-  head: () => ({
-    meta: [
-      { title: "Create Account — FixFlow" },
-      { name: "description", content: "Join FixFlow today" },
-    ],
-  }),
-});
+type AppRole = string;
 
 const roles: { value: AppRole; label: string; icon: React.ElementType; desc: string }[] = [
   { value: "user", label: "Customer", icon: User, desc: "I need repairs" },
@@ -27,20 +19,22 @@ const roles: { value: AppRole; label: string; icon: React.ElementType; desc: str
   { value: "company", label: "Company", icon: Building2, desc: "We provide services" },
 ];
 
-function RegisterPage() {
+const Register = () => {
   const [role, setRole] = useState<AppRole>("user");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  // Company fields
   const [companyName, setCompanyName] = useState("");
   const [companyDesc, setCompanyDesc] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [taxId, setTaxId] = useState("");
   const [website, setWebsite] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
   const { signUp } = useAuth();
-  const navigate = Route.useNavigate();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +76,7 @@ function RegisterPage() {
             <p className="mt-1 text-sm text-muted-foreground">Join FixFlow today</p>
           </div>
 
+          {/* Role Selector */}
           <div className="mb-6 flex rounded-lg border bg-muted p-1 gap-1">
             {roles.map((r) => (
               <button
@@ -116,6 +111,7 @@ function RegisterPage() {
               <Input id="password" type="password" placeholder="••••••••" className="mt-1" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
 
+            {/* Company-specific fields */}
             {role === "company" && (
               <div className="space-y-4 rounded-lg border bg-accent/50 p-4">
                 <p className="text-sm font-semibold flex items-center gap-1.5">
@@ -161,4 +157,8 @@ function RegisterPage() {
       <Footer />
     </div>
   );
-}
+};
+
+
+
+export const Route = createFileRoute("/register")({ component: Register });

@@ -1,7 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+const db = supabase as any;
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,25 +15,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { ArrowLeft, ImagePlus, Loader2, X, CalendarIcon } from "lucide-react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { categories } from "@/data/mockData";
+import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-const db = supabase as any;
-
-export const Route = createFileRoute("/requests/new")({
-  component: CreateRequestPage,
-  head: () => ({
-    meta: [
-      { title: "Post a Request — FixFlow" },
-    ],
-  }),
-});
-
-function CreateRequestPage() {
+const CreateRequest = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -49,7 +42,7 @@ function CreateRequestPage() {
   const handlePhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (photos.length + files.length > 5) {
-      toast.error("Max 5 photos");
+      toast({ title: "Max 5 photos", variant: "destructive" });
       return;
     }
     setPhotos((prev) => [...prev, ...files]);
@@ -68,25 +61,26 @@ function CreateRequestPage() {
   const handleSubmit = async () => {
     if (!user) { navigate({ to: "/login" }); return; }
     if (!title.trim() || !description.trim() || !category) {
-      toast.error("Please fill in title, description, and category");
+      toast({ title: "Please fill in title, description, and category", variant: "destructive" });
       return;
     }
 
     setSubmitting(true);
     try {
+      // Upload photos
       const photoUrls: string[] = [];
       for (const file of photos) {
         const ext = file.name.split(".").pop();
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await db.storage
           .from("request-photos")
           .upload(path, file);
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("request-photos").getPublicUrl(path);
+        const { data: urlData } = db.storage.from("request-photos").getPublicUrl(path);
         photoUrls.push(urlData.publicUrl);
       }
 
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("service_requests")
         .insert({
           user_id: user.id,
@@ -105,10 +99,10 @@ function CreateRequestPage() {
         .single();
 
       if (error) throw error;
-      toast.success("Request posted!");
-      navigate({ to: "/requests/$id", params: { id: data.id } });
+      toast({ title: "Request posted!" });
+      navigate(`/requests/${data.id}`);
     } catch (err: any) {
-      toast.error(err.message || "Error creating request");
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -208,7 +202,7 @@ function CreateRequestPage() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(d) => d < new Date(new Date().setHours(0,0,0,0))} initialFocus className="p-3" />
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(d) => d < new Date(new Date().setHours(0,0,0,0))} initialFocus className={cn("p-3 pointer-events-auto")} />
                   </PopoverContent>
                 </Popover>
                 <Popover>
@@ -219,15 +213,15 @@ function CreateRequestPage() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(d) => d < (startDate || new Date(new Date().setHours(0,0,0,0)))} initialFocus className="p-3" />
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(d) => d < (startDate || new Date(new Date().setHours(0,0,0,0)))} initialFocus className={cn("p-3 pointer-events-auto")} />
                   </PopoverContent>
                 </Popover>
               </div>
             </div>
 
-            <Button variant="hero" className="w-full" onClick={handleSubmit} disabled={submitting}>
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Post Request
+            <Button onClick={handleSubmit} disabled={submitting} className="w-full gap-2" variant="hero">
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {submitting ? "Posting..." : "Post Request"}
             </Button>
           </CardContent>
         </Card>
@@ -235,4 +229,8 @@ function CreateRequestPage() {
       <Footer />
     </div>
   );
-}
+};
+
+
+
+export const Route = createFileRoute("/requests/new")({ component: CreateRequest });

@@ -1,25 +1,18 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useNavigate, Link } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+const db = supabase as any;
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, MapPin, DollarSign, CalendarDays, Clock, ArrowRight, HardHat } from "lucide-react";
+import { Loader2, MapPin, DollarSign, CalendarDays, Clock, ArrowRight } from "lucide-react";
 
-const db = supabase as any;
-
-export const Route = createFileRoute("/my-requests")({
-  component: MyRequestsPage,
-  head: () => ({
-    meta: [
-      { title: "My Requests — FixFlow" },
-    ],
-  }),
-});
+import { HardHat } from "lucide-react";
 
 interface MyRequest {
   id: string;
@@ -49,7 +42,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 const ACTIVE_STATUSES = ["open", "in_negotiation", "assigned", "in_progress"];
 const ARCHIVE_STATUSES = ["completed", "cancelled"];
 
-function MyRequestsPage() {
+const MyRequests = () => {
   const { user, userRole, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [requests, setRequests] = useState<MyRequest[]>([]);
@@ -61,14 +54,16 @@ function MyRequestsPage() {
 
   useEffect(() => {
     if (!user) return;
-    const fetchData = async () => {
-      const { data: ownRequests } = await db
+    const fetch = async () => {
+      // Fetch requests created by the user
+      const { data: ownRequests } = await supabase
         .from("service_requests")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      const { data: acceptedOffers } = await db
+      // Fetch requests where the user has an accepted offer (worker jobs)
+      const { data: acceptedOffers } = await supabase
         .from("offers")
         .select("request_id")
         .eq("worker_id", user.id)
@@ -76,8 +71,8 @@ function MyRequestsPage() {
 
       let workerRequests: MyRequest[] = [];
       if (acceptedOffers && acceptedOffers.length > 0) {
-        const requestIds = acceptedOffers.map((o: any) => o.request_id);
-        const { data: workerData } = await db
+        const requestIds = acceptedOffers.map((o) => o.request_id);
+        const { data: workerData } = await supabase
           .from("service_requests")
           .select("*")
           .in("id", requestIds)
@@ -85,6 +80,7 @@ function MyRequestsPage() {
         workerRequests = ((workerData as MyRequest[]) || []).map((r) => ({ ...r, isWorkerJob: true }));
       }
 
+      // Merge and deduplicate
       const ownMapped = ((ownRequests as MyRequest[]) || []).map((r) => ({ ...r, isWorkerJob: false }));
       const allIds = new Set(ownMapped.map((r) => r.id));
       const merged = [...ownMapped, ...workerRequests.filter((r) => !allIds.has(r.id))];
@@ -93,7 +89,7 @@ function MyRequestsPage() {
       setRequests(merged);
       setLoading(false);
     };
-    fetchData();
+    fetch();
   }, [user]);
 
   const active = requests.filter((r) => ACTIVE_STATUSES.includes(r.status));
@@ -103,7 +99,7 @@ function MyRequestsPage() {
   const RequestCard = ({ req }: { req: MyRequest }) => {
     const cfg = statusConfig[req.status] || statusConfig.open;
     return (
-      <Link to="/requests/$id" params={{ id: req.id }}>
+      <Link to={`/requests/${req.id}`}>
         <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
@@ -200,4 +196,7 @@ function MyRequestsPage() {
       <Footer />
     </div>
   );
-}
+};
+
+
+export const Route = createFileRoute("/my-requests")({ component: MyRequests });
