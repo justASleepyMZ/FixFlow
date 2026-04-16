@@ -1,7 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import type { AppRole, Profile, CompanyProfile } from "@/types/database";
+
+type AppRole = "user" | "worker" | "company" | "admin";
+
+interface Profile {
+  display_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+}
+
+interface CompanyProfile {
+  company_name: string;
+  company_description: string | null;
+  company_address: string | null;
+  tax_id: string | null;
+  website: string | null;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +38,7 @@ export const useAuth = () => {
   return ctx;
 };
 
-const SESSION_DURATION_MS = 60 * 60 * 1000;
+const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
 // Helper to bypass strict Supabase typing when tables aren't in the generated types yet
 const db = supabase as any;
@@ -54,12 +69,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (loginTime && Date.now() - parseInt(loginTime) > SESSION_DURATION_MS) {
       supabase.auth.signOut();
       localStorage.removeItem("fixflow_login_time");
-      return true;
+      return true; // expired
     }
     return false;
   };
 
   useEffect(() => {
+    // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
       if (sess && checkSessionExpiry(sess)) return;
       setSession(sess);
@@ -74,6 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
+    // THEN check existing session
     supabase.auth.getSession().then(({ data: { session: sess } }) => {
       if (sess && checkSessionExpiry(sess)) {
         setLoading(false);
@@ -85,6 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
+    // Periodic session expiry check (every minute)
     const interval = setInterval(() => {
       checkSessionExpiry(session);
     }, 60_000);
@@ -116,9 +134,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = data.user?.id;
     if (!userId) return { error: new Error("Signup failed") };
 
+    // Update profile phone
     await db.from("profiles").update({ phone }).eq("user_id", userId);
+
+    // Insert role
     await db.from("user_roles").insert({ user_id: userId, role });
 
+    // Insert company profile if company role
     if (role === "company" && companyData?.company_name) {
       await db.from("company_profiles").insert({
         user_id: userId,
@@ -158,3 +180,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+export type { AppRole, Profile, CompanyProfile };
