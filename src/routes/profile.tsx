@@ -46,7 +46,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate({ to: "/login" });
+      navigate({ to: "/login" } as any);
     }
   }, [authLoading, user, navigate]);
 
@@ -69,7 +69,7 @@ const Profile = () => {
     setSaving(true);
 
     try {
-      const { error: profileError } = await supabase
+      const { error: profileError } = await db
         .from("profiles")
         .update({ display_name: displayName, phone })
         .eq("user_id", user.id);
@@ -77,7 +77,7 @@ const Profile = () => {
       if (profileError) throw profileError;
 
       if (userRole === "company" && companyProfile) {
-        const { error: companyError } = await supabase
+        const { error: companyError } = await db
           .from("company_profiles")
           .update({
             company_name: companyName,

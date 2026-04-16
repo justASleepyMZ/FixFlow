@@ -44,7 +44,7 @@ const Requests = () => {
 
   useEffect(() => {
     const fetchRequests = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("service_requests")
         .select("*")
         .order("created_at", { ascending: false });
@@ -56,24 +56,24 @@ const Requests = () => {
       }
 
       // Extract unique cities
-      const uniqueCities = [...new Set((data || []).map((r) => r.city).filter(Boolean))] as string[];
+      const uniqueCities = [...new Set((data || []).map((r: any) => r.city).filter(Boolean))] as string[];
       setCities(uniqueCities);
 
       // Fetch poster average ratings
-      const userIds = [...new Set((data || []).map((r) => r.user_id))];
-      const { data: ratingsData } = await supabase
+      const userIds = [...new Set((data || []).map((r: any) => r.user_id))];
+      const { data: ratingsData } = await db
         .from("ratings")
         .select("rated_user_id, rating")
         .in("rated_user_id", userIds);
 
       const ratingMap: Record<string, { sum: number; count: number }> = {};
-      ratingsData?.forEach((r) => {
+      ratingsData?.forEach((r: any) => {
         if (!ratingMap[r.rated_user_id]) ratingMap[r.rated_user_id] = { sum: 0, count: 0 };
         ratingMap[r.rated_user_id].sum += r.rating;
         ratingMap[r.rated_user_id].count += 1;
       });
 
-      const mapped: ServiceRequestData[] = (data || []).map((r) => {
+      const mapped: ServiceRequestData[] = (data || []).map((r: any) => {
         const avg = ratingMap[r.user_id]
           ? ratingMap[r.user_id].sum / ratingMap[r.user_id].count
           : 0;
@@ -93,7 +93,7 @@ const Requests = () => {
           desiredStartDate: r.desired_start_date ?? undefined,
           desiredEndDate: r.desired_end_date ?? undefined,
         };
-      }).filter((r) => r.status.toLowerCase() === "open");
+      }).filter((r: any) => r.status.toLowerCase() === "open");
       setRequests(mapped);
       setLoading(false);
     };

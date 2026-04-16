@@ -59,7 +59,7 @@ const CreateRequest = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user) { navigate({ to: "/login" }); return; }
+    if (!user) { navigate({ to: "/login" } as any); return; }
     if (!title.trim() || !description.trim() || !category) {
       toast({ title: "Please fill in title, description, and category", variant: "destructive" });
       return;
@@ -80,7 +80,7 @@ const CreateRequest = () => {
         photoUrls.push(urlData.publicUrl);
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("service_requests")
         .insert({
           user_id: user.id,
@@ -100,7 +100,7 @@ const CreateRequest = () => {
 
       if (error) throw error;
       toast({ title: "Request posted!" });
-      navigate(`/requests/${data.id}`);
+      navigate({ to: `/requests/${data.id}` } as any);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -109,7 +109,7 @@ const CreateRequest = () => {
   };
 
   if (authLoading) return null;
-  if (!user) { navigate({ to: "/login" }); return null; }
+  if (!user) { navigate({ to: "/login" } as any); return null; }
 
   return (
     <div className="min-h-screen bg-gradient-surface">

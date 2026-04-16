@@ -81,7 +81,7 @@ const RequestDetail = () => {
     if (!id) return;
 
     const fetchRequest = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("service_requests")
         .select("*")
         .eq("id", id)
@@ -94,26 +94,26 @@ const RequestDetail = () => {
       setRequest(data as ServiceRequest);
 
       // Fetch owner average rating
-      const { data: ownerRatings } = await supabase
+      const { data: ownerRatings } = await db
         .from("ratings")
         .select("rating")
         .eq("rated_user_id", data.user_id);
 
       if (ownerRatings && ownerRatings.length > 0) {
-        const avg = ownerRatings.reduce((s, r) => s + r.rating, 0) / ownerRatings.length;
+        const avg = ownerRatings.reduce((s: number, r: any) => s + r.rating, 0) / ownerRatings.length;
         setOwnerAvgRating(avg);
       }
 
       // Fetch offers
       if (user) {
-        const { data: offersData } = await supabase
+        const { data: offersData } = await db
           .from("offers")
           .select("*")
           .eq("request_id", id)
           .order("created_at", { ascending: true });
 
         if (offersData && offersData.length > 0) {
-          const workerIds = offersData.map((o) => o.worker_id);
+          const workerIds = offersData.map((o: any) => o.worker_id);
 
           // Fetch profiles + avg ratings for workers in parallel
           const [profilesRes, ratingsRes, existingRatingsRes] = await Promise.all([
@@ -124,13 +124,13 @@ const RequestDetail = () => {
           ]);
 
           const profileMap: Record<string, string> = {};
-          profilesRes.data?.forEach((p) => {
+          profilesRes.data?.forEach((p: any) => {
             profileMap[p.user_id] = p.display_name || "Worker";
           });
 
           // Compute avg rating per worker
           const ratingAcc: Record<string, { sum: number; count: number }> = {};
-          ratingsRes.data?.forEach((r) => {
+          ratingsRes.data?.forEach((r: any) => {
             if (!ratingAcc[r.rated_user_id]) ratingAcc[r.rated_user_id] = { sum: 0, count: 0 };
             ratingAcc[r.rated_user_id].sum += r.rating;
             ratingAcc[r.rated_user_id].count += 1;
@@ -138,13 +138,13 @@ const RequestDetail = () => {
 
           // Existing ratings by current user
           const existingMap: Record<string, number> = {};
-          existingRatingsRes.data?.forEach((r) => {
+          existingRatingsRes.data?.forEach((r: any) => {
             existingMap[r.rated_user_id] = r.rating;
           });
           setRatingWorkerMap(existingMap);
 
           setOffers(
-            offersData.map((o) => ({
+            offersData.map((o: any) => ({
               ...o,
               price: Number(o.price),
               worker_name: profileMap[o.worker_id] || "Worker",
@@ -170,7 +170,7 @@ const RequestDetail = () => {
     }
 
     setSubmittingOffer(true);
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("offers")
       .insert({
         request_id: id,
@@ -207,7 +207,7 @@ const RequestDetail = () => {
 
     if (existing) {
       // Update
-      const res = await supabase
+      const res = await db
         .from("ratings")
         .update({ rating })
         .eq("rated_user_id", workerId)
@@ -216,7 +216,7 @@ const RequestDetail = () => {
       error = res.error;
     } else {
       // Insert
-      const res = await supabase
+      const res = await db
         .from("ratings")
         .insert({
           rated_user_id: workerId,
@@ -284,7 +284,7 @@ const RequestDetail = () => {
     );
 
     toast.success("Offer accepted! Redirecting to My Requests.");
-    navigate({ to: "/my-requests" });
+    navigate({ to: "/my-requests" } as any);
     setAcceptingOfferId(null);
   };
 
