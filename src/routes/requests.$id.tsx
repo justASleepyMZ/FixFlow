@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+const db = supabase as any;
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   MapPin, Clock, DollarSign, ArrowLeft, MessageSquare, User,
@@ -251,7 +252,7 @@ const RequestDetail = () => {
 
     setAcceptingOfferId(offer.id);
 
-    const { data, error } = await supabase.functions.invoke("accept-offer", {
+    const { data, error } = await db.functions.invoke("accept-offer", {
       body: {
         offerId: offer.id,
         requestId: request.id,
@@ -283,7 +284,7 @@ const RequestDetail = () => {
     );
 
     toast.success("Offer accepted! Redirecting to My Requests.");
-    navigate("/my-requests");
+    navigate({ to: "/my-requests" });
     setAcceptingOfferId(null);
   };
 
@@ -529,11 +530,11 @@ const RequestDetail = () => {
                 const newWorker = side === "worker" ? true : workerDone;
 
                 if (newCustomer && newWorker) {
-                  await supabase.from("service_requests").update({ ...update, status: "completed" }).eq("id", request.id);
+                  await db.from("service_requests").update({ ...update, status: "completed" }).eq("id", request.id);
                   setRequest({ ...request, ...update, status: "completed" });
                   toast.success("Both confirmed! Request is now completed and archived.");
                 } else {
-                  await supabase.from("service_requests").update(update).eq("id", request.id);
+                  await db.from("service_requests").update(update).eq("id", request.id);
                   setRequest({ ...request, ...update });
                   toast.success("Confirmed! Waiting for the other party.");
                 }
@@ -637,11 +638,11 @@ const RequestDetail = () => {
                 <Button variant="hero" className="w-full gap-2" onClick={async () => {
                   const newCustomer = request.customer_confirmed_complete;
                   if (newCustomer) {
-                    await supabase.from("service_requests").update({ worker_confirmed_complete: true, status: "completed" }).eq("id", request.id);
+                    await db.from("service_requests").update({ worker_confirmed_complete: true, status: "completed" }).eq("id", request.id);
                     setRequest({ ...request, worker_confirmed_complete: true, status: "completed" });
                     toast.success("Both confirmed! Request is now completed and archived.");
                   } else {
-                    await supabase.from("service_requests").update({ worker_confirmed_complete: true }).eq("id", request.id);
+                    await db.from("service_requests").update({ worker_confirmed_complete: true }).eq("id", request.id);
                     setRequest({ ...request, worker_confirmed_complete: true });
                     toast.success("Marked as complete. Waiting for customer confirmation.");
                   }

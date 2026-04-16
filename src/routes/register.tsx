@@ -10,9 +10,8 @@ import { Wrench, Loader2, User, HardHat, Building2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import type { Database } from "@/integrations/supabase/types";
 
-type AppRole = Database["public"]["Enums"]["app_role"];
+type AppRole = string;
 
 const roles: { value: AppRole; label: string; icon: React.ElementType; desc: string }[] = [
   { value: "user", label: "Customer", icon: User, desc: "I need repairs" },
@@ -60,7 +59,7 @@ const Register = () => {
       toast.error(error.message);
     } else {
       toast.success("Account created successfully!");
-      navigate("/");
+      navigate({ to: "/" });
     }
   };
 

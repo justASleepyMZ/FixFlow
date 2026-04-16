@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+const db = supabase as any;
 import { Link } from "@tanstack/react-router";
 import type { ServiceRequestData } from "@/components/ServiceRequestCard";
 

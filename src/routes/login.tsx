@@ -30,7 +30,7 @@ const Login = () => {
       toast.error(error.message);
     } else {
       toast.success("Welcome back!");
-      navigate("/");
+      navigate({ to: "/" });
     }
   };
 

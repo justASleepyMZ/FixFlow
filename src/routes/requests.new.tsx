@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+const db = supabase as any;
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ const CreateRequest = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) { navigate({ to: "/login" }); return; }
     if (!title.trim() || !description.trim() || !category) {
       toast({ title: "Please fill in title, description, and category", variant: "destructive" });
       return;
@@ -71,7 +72,7 @@ const CreateRequest = () => {
       for (const file of photos) {
         const ext = file.name.split(".").pop();
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await db.storage
           .from("request-photos")
           .upload(path, file);
         if (uploadError) throw uploadError;
@@ -108,7 +109,7 @@ const CreateRequest = () => {
   };
 
   if (authLoading) return null;
-  if (!user) { navigate("/login"); return null; }
+  if (!user) { navigate({ to: "/login" }); return null; }
 
   return (
     <div className="min-h-screen bg-gradient-surface">
