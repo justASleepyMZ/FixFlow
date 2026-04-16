@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { motion, type Variants, type EasingDefinition } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -211,5 +210,5 @@ const Index = () => {
 };
 
 
-
+import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({ component: Index });

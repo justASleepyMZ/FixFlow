@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L, { type Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
-const db = supabase as any;
 import { Loader2, MapPin } from "lucide-react";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -70,7 +69,7 @@ const buildPopupContent = (request: MapRequest) => `
   </div>
 `;
 
-const MapContent = () => {
+const MapPage = () => {
   const [requests, setRequests] = useState<MapRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
@@ -124,7 +123,7 @@ const MapContent = () => {
 
   useEffect(() => {
     const fetchRequests = async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("service_requests")
         .select("id, title, city, budget")
         .eq("status", "open")
@@ -139,7 +138,7 @@ const MapContent = () => {
       const cityMarkerCounts: Record<string, number> = {};
 
       const mappedRequests: MapRequest[] = (data ?? [])
-        .map((request: any) => {
+        .map((request) => {
           if (!request.city) return null;
 
           const cityKey = request.city.toLowerCase();
@@ -162,7 +161,7 @@ const MapContent = () => {
             position: [baseCoords[0] + latOffset, baseCoords[1] + lngOffset] as [number, number],
           };
         })
-        .filter((request: any): request is MapRequest => Boolean(request));
+        .filter((request): request is MapRequest => Boolean(request));
 
       setRequests(mappedRequests);
       setLoading(false);
@@ -185,7 +184,7 @@ const MapContent = () => {
   }, [requests]);
 
   return (
-    <>
+    <div>
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold md:text-3xl">Requests Map</h1>
@@ -209,8 +208,8 @@ const MapContent = () => {
           <div ref={mapElementRef} className="h-full w-full" aria-label="Open requests map" />
         </div>
       )}
-    </>
+    </div>
   );
 };
 
-export default MapContent;
+export default MapPage;

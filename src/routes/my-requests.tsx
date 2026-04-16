@@ -1,9 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-const db = supabase as any;
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -56,14 +54,14 @@ const MyRequests = () => {
     if (!user) return;
     const fetch = async () => {
       // Fetch requests created by the user
-      const { data: ownRequests } = await db
+      const { data: ownRequests } = await supabase
         .from("service_requests")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       // Fetch requests where the user has an accepted offer (worker jobs)
-      const { data: acceptedOffers } = await db
+      const { data: acceptedOffers } = await supabase
         .from("offers")
         .select("request_id")
         .eq("worker_id", user.id)
@@ -71,8 +69,8 @@ const MyRequests = () => {
 
       let workerRequests: MyRequest[] = [];
       if (acceptedOffers && acceptedOffers.length > 0) {
-        const requestIds = acceptedOffers.map((o: any) => o.request_id);
-        const { data: workerData } = await db
+        const requestIds = acceptedOffers.map((o) => o.request_id);
+        const { data: workerData } = await supabase
           .from("service_requests")
           .select("*")
           .in("id", requestIds)
@@ -199,4 +197,5 @@ const MyRequests = () => {
 };
 
 
+import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/my-requests")({ component: MyRequests });

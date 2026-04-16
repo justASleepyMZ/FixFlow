@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,9 @@ import { Wrench, Loader2, User, HardHat, Building2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
-type AppRole = "user" | "worker" | "company";
+type AppRole = Database["public"]["Enums"]["app_role"];
 
 const roles: { value: AppRole; label: string; icon: React.ElementType; desc: string }[] = [
   { value: "user", label: "Customer", icon: User, desc: "I need repairs" },
@@ -42,14 +42,6 @@ const Register = () => {
       toast.error("Please fill in all required fields");
       return;
     }
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
-    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-      toast.error("Password must contain uppercase, lowercase letters and a number");
-      return;
-    }
     if (role === "company" && !companyName) {
       toast.error("Please enter your company name");
       return;
@@ -64,13 +56,10 @@ const Register = () => {
     } : undefined);
     setSubmitting(false);
     if (error) {
-      const msg = error.message?.toLowerCase().includes("weak") || error.message?.toLowerCase().includes("pwned")
-        ? "This password is too common. Please choose a stronger one."
-        : error.message;
-      toast.error(msg);
+      toast.error(error.message);
     } else {
       toast.success("Account created successfully!");
-      navigate({ to: role === "user" || role === "company" ? "/requests" : "/" } as any);
+      navigate({ to: "/" } as any);
     }
   };
 
@@ -120,7 +109,6 @@ const Register = () => {
             <div>
               <Label htmlFor="password">Password *</Label>
               <Input id="password" type="password" placeholder="••••••••" className="mt-1" value={password} onChange={(e) => setPassword(e.target.value)} />
-              <p className="mt-1 text-xs text-muted-foreground">Min 8 chars, must include upper & lowercase + a number. Avoid common passwords.</p>
             </div>
 
             {/* Company-specific fields */}
@@ -172,5 +160,5 @@ const Register = () => {
 };
 
 
-
+import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/register")({ component: Register });

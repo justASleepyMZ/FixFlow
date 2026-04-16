@@ -20,8 +20,6 @@ interface OfferChatProps {
   otherUserName: string;
 }
 
-const db = supabase as any;
-
 const OfferChat = ({ offerId, otherUserName }: OfferChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -35,7 +33,7 @@ const OfferChat = ({ offerId, otherUserName }: OfferChatProps) => {
     if (!offerId) return;
 
     const fetchMessages = async () => {
-      const { data } = await db
+      const { data } = await supabase
         .from("chat_messages")
         .select("*")
         .eq("offer_id", offerId)
@@ -64,6 +62,7 @@ const OfferChat = ({ offerId, otherUserName }: OfferChatProps) => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Show warning when typing sensitive info
   useEffect(() => {
     setWarning(containsSensitiveContent(newMessage));
   }, [newMessage]);
@@ -72,9 +71,10 @@ const OfferChat = ({ offerId, otherUserName }: OfferChatProps) => {
     if (!newMessage.trim() || !user || sending) return;
     setSending(true);
 
+    // Filter sensitive content before sending
     const { filtered } = filterSensitiveContent(newMessage.trim());
 
-    await db.from("chat_messages").insert({
+    await supabase.from("chat_messages").insert({
       offer_id: offerId,
       sender_id: user.id,
       content: filtered,
@@ -119,6 +119,7 @@ const OfferChat = ({ offerId, otherUserName }: OfferChatProps) => {
         )}
         {messages.map((msg) => {
           const isMine = msg.sender_id === user?.id;
+          // Also filter on display in case old messages weren't filtered
           const { filtered: displayContent } = filterSensitiveContent(msg.content);
           return (
             <div key={msg.id} className={`mb-3 flex ${isMine ? "justify-end" : "justify-start"}`}>

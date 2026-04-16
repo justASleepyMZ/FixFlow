@@ -1,9 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-const db = supabase as any;
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -69,7 +67,7 @@ const Profile = () => {
     setSaving(true);
 
     try {
-      const { error: profileError } = await db
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({ display_name: displayName, phone })
         .eq("user_id", user.id);
@@ -77,7 +75,7 @@ const Profile = () => {
       if (profileError) throw profileError;
 
       if (userRole === "company" && companyProfile) {
-        const { error: companyError } = await db
+        const { error: companyError } = await supabase
           .from("company_profiles")
           .update({
             company_name: companyName,
@@ -202,5 +200,5 @@ const Profile = () => {
 };
 
 
-
+import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/profile")({ component: Profile });

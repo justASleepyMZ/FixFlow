@@ -31,6 +31,7 @@ export function filterSensitiveContent(text: string): FilterResult {
       hasSensitiveContent = true;
       filtered = filtered.replace(regex, MASK);
     }
+    // Reset lastIndex for global regexes
     regex.lastIndex = 0;
   }
 

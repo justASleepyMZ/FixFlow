@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
-type AppRole = "user" | "worker" | "company" | "admin";
+type AppRole = Database["public"]["Enums"]["app_role"];
 
 interface Profile {
   display_name: string | null;
@@ -40,9 +41,6 @@ export const useAuth = () => {
 
 const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
-// Helper to bypass strict Supabase typing when tables aren't in the generated types yet
-const db = supabase as any;
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -53,13 +51,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserData = async (userId: string) => {
     const [profileRes, roleRes, companyRes] = await Promise.all([
-      db.from("profiles").select("display_name, avatar_url, phone").eq("user_id", userId).single(),
-      db.from("user_roles").select("role").eq("user_id", userId).single(),
-      db.from("company_profiles").select("company_name, company_description, company_address, tax_id, website").eq("user_id", userId).maybeSingle(),
+      supabase.from("profiles").select("display_name, avatar_url, phone").eq("user_id", userId).single(),
+      supabase.from("user_roles").select("role").eq("user_id", userId).single(),
+      supabase.from("company_profiles").select("company_name, company_description, company_address, tax_id, website").eq("user_id", userId).maybeSingle(),
     ]);
-    setProfile(profileRes.data as Profile | null);
+    setProfile(profileRes.data);
     setUserRole(roleRes.data?.role ?? null);
-    setCompanyProfile(companyRes.data as CompanyProfile | null);
+    setCompanyProfile(companyRes.data);
   };
 
   const checkSessionExpiry = (sess: Session | null) => {
@@ -134,26 +132,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = data.user?.id;
     if (!userId) return { error: new Error("Signup failed") };
 
-    // If no session yet (email confirmation required), sign in to obtain one so RLS-protected inserts work
-    if (!data.session) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        return { error: new Error("Account created. Please check your email to confirm, then sign in.") };
-      }
-    }
-
-    // Update profile phone (profile row is auto-created by handle_new_user trigger)
-    if (phone) {
-      await db.from("profiles").update({ phone }).eq("user_id", userId);
-    }
+    // Update profile phone
+    await supabase.from("profiles").update({ phone }).eq("user_id", userId);
 
     // Insert role
-    const { error: roleError } = await db.from("user_roles").insert({ user_id: userId, role });
-    if (roleError) console.error("Role insert error:", roleError);
+    await supabase.from("user_roles").insert({ user_id: userId, role });
 
     // Insert company profile if company role
     if (role === "company" && companyData?.company_name) {
-      await db.from("company_profiles").insert({
+      await supabase.from("company_profiles").insert({
         user_id: userId,
         company_name: companyData.company_name,
         company_description: companyData.company_description ?? null,
@@ -191,5 +178,3 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-
-export type { AppRole, Profile, CompanyProfile };

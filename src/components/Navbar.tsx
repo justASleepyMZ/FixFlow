@@ -28,10 +28,10 @@ const Navbar = () => {
   const { user, profile, userRole, signOut, loading } = useAuth();
 
   const links = [
-    { to: "/" as const, label: "Home" },
-    { to: "/requests" as const, label: "Browse Requests" },
-    ...(user ? [{ to: "/my-requests" as const, label: "My Requests" }] : []),
-    { to: "/map" as const, label: "Map" },
+    { to: "/", label: "Home" },
+    { to: "/requests", label: "Browse Requests" },
+    ...(user ? [{ to: "/my-requests", label: "My Requests" }] : []),
+    { to: "/map", label: "Map" },
   ];
 
   const handleQuickRole = (r: GuestRole) => {
@@ -39,6 +39,7 @@ const Navbar = () => {
     setMobileOpen(false);
   };
 
+  // Determine the active role: authenticated role takes priority
   const activeRole = user ? userRole : role;
   const currentRole = activeRole ? roleConfig[activeRole] : null;
 
