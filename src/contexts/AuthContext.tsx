@@ -134,11 +134,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = data.user?.id;
     if (!userId) return { error: new Error("Signup failed") };
 
-    // Update profile phone
-    await db.from("profiles").update({ phone }).eq("user_id", userId);
+    // If no session yet (email confirmation required), sign in to obtain one so RLS-protected inserts work
+    if (!data.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        return { error: new Error("Account created. Please check your email to confirm, then sign in.") };
+      }
+    }
+
+    // Update profile phone (profile row is auto-created by handle_new_user trigger)
+    if (phone) {
+      await db.from("profiles").update({ phone }).eq("user_id", userId);
+    }
 
     // Insert role
-    await db.from("user_roles").insert({ user_id: userId, role });
+    const { error: roleError } = await db.from("user_roles").insert({ user_id: userId, role });
+    if (roleError) console.error("Role insert error:", roleError);
 
     // Insert company profile if company role
     if (role === "company" && companyData?.company_name) {
