@@ -71,7 +71,7 @@ const MyRequests = () => {
 
       let workerRequests: MyRequest[] = [];
       if (acceptedOffers && acceptedOffers.length > 0) {
-        const requestIds = acceptedOffers.map((o) => o.request_id);
+        const requestIds = acceptedOffers.map((o: any) => o.request_id);
         const { data: workerData } = await db
           .from("service_requests")
           .select("*")

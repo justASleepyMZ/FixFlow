@@ -100,7 +100,7 @@ const RequestDetail = () => {
         .eq("rated_user_id", data.user_id);
 
       if (ownerRatings && ownerRatings.length > 0) {
-        const avg = ownerRatings.reduce((s, r) => s + r.rating, 0) / ownerRatings.length;
+        const avg = ownerRatings.reduce((s: number, r: any) => s + r.rating, 0) / ownerRatings.length;
         setOwnerAvgRating(avg);
       }
 
@@ -113,7 +113,7 @@ const RequestDetail = () => {
           .order("created_at", { ascending: true });
 
         if (offersData && offersData.length > 0) {
-          const workerIds = offersData.map((o) => o.worker_id);
+          const workerIds = offersData.map((o: any) => o.worker_id);
 
           // Fetch profiles + avg ratings for workers in parallel
           const [profilesRes, ratingsRes, existingRatingsRes] = await Promise.all([
@@ -124,13 +124,13 @@ const RequestDetail = () => {
           ]);
 
           const profileMap: Record<string, string> = {};
-          profilesRes.data?.forEach((p) => {
+          profilesRes.data?.forEach((p: any) => {
             profileMap[p.user_id] = p.display_name || "Worker";
           });
 
           // Compute avg rating per worker
           const ratingAcc: Record<string, { sum: number; count: number }> = {};
-          ratingsRes.data?.forEach((r) => {
+          ratingsRes.data?.forEach((r: any) => {
             if (!ratingAcc[r.rated_user_id]) ratingAcc[r.rated_user_id] = { sum: 0, count: 0 };
             ratingAcc[r.rated_user_id].sum += r.rating;
             ratingAcc[r.rated_user_id].count += 1;
@@ -138,13 +138,13 @@ const RequestDetail = () => {
 
           // Existing ratings by current user
           const existingMap: Record<string, number> = {};
-          existingRatingsRes.data?.forEach((r) => {
+          existingRatingsRes.data?.forEach((r: any) => {
             existingMap[r.rated_user_id] = r.rating;
           });
           setRatingWorkerMap(existingMap);
 
           setOffers(
-            offersData.map((o) => ({
+            offersData.map((o: any) => ({
               ...o,
               price: Number(o.price),
               worker_name: profileMap[o.worker_id] || "Worker",

@@ -142,7 +142,7 @@ const MapPage = () => {
       const cityMarkerCounts: Record<string, number> = {};
 
       const mappedRequests: MapRequest[] = (data ?? [])
-        .map((request) => {
+        .map((request: any) => {
           if (!request.city) return null;
 
           const cityKey = request.city.toLowerCase();
@@ -165,7 +165,7 @@ const MapPage = () => {
             position: [baseCoords[0] + latOffset, baseCoords[1] + lngOffset] as [number, number],
           };
         })
-        .filter((request): request is MapRequest => Boolean(request));
+        .filter((request: any): request is MapRequest => Boolean(request));
 
       setRequests(mappedRequests);
       setLoading(false);
