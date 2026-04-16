@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ServiceRequestCard from "@/components/ServiceRequestCard";
@@ -14,7 +13,6 @@ import { useEffect, useState } from "react";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-const db = supabase as any;
 import { Link } from "@tanstack/react-router";
 import type { ServiceRequestData } from "@/components/ServiceRequestCard";
 
@@ -32,8 +30,8 @@ const Requests = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [priorityCity, setPriorityCity] = useState<string | null>(null);
-  const [cityChosen, setCityChosen] = useState(false);
+  const [priorityCity, setPriorityCity] = useState<string | null>(() => localStorage.getItem(CITY_STORAGE_KEY));
+  const [cityChosen, setCityChosen] = useState(() => localStorage.getItem(CITY_CHOSEN_KEY) === "true");
   const [minRating, setMinRating] = useState(0);
   const { effectiveRole } = useRole();
   const { user } = useAuth();
@@ -43,14 +41,8 @@ const Requests = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    setPriorityCity(localStorage.getItem(CITY_STORAGE_KEY));
-    setCityChosen(localStorage.getItem(CITY_CHOSEN_KEY) === "true");
-  }, []);
-
-  useEffect(() => {
     const fetchRequests = async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("service_requests")
         .select("*")
         .order("created_at", { ascending: false });
@@ -61,23 +53,25 @@ const Requests = () => {
         return;
       }
 
-      const uniqueCities = [...new Set((data || []).map((r: any) => r.city).filter(Boolean))] as string[];
+      // Extract unique cities
+      const uniqueCities = [...new Set((data || []).map((r) => r.city).filter(Boolean))] as string[];
       setCities(uniqueCities);
 
-      const userIds = [...new Set((data || []).map((r: any) => r.user_id))];
-      const { data: ratingsData } = await db
+      // Fetch poster average ratings
+      const userIds = [...new Set((data || []).map((r) => r.user_id))];
+      const { data: ratingsData } = await supabase
         .from("ratings")
         .select("rated_user_id, rating")
         .in("rated_user_id", userIds);
 
       const ratingMap: Record<string, { sum: number; count: number }> = {};
-      ratingsData?.forEach((r: any) => {
+      ratingsData?.forEach((r) => {
         if (!ratingMap[r.rated_user_id]) ratingMap[r.rated_user_id] = { sum: 0, count: 0 };
         ratingMap[r.rated_user_id].sum += r.rating;
         ratingMap[r.rated_user_id].count += 1;
       });
 
-      const mapped: ServiceRequestData[] = (data || []).map((r: any) => {
+      const mapped: ServiceRequestData[] = (data || []).map((r) => {
         const avg = ratingMap[r.user_id]
           ? ratingMap[r.user_id].sum / ratingMap[r.user_id].count
           : 0;
@@ -97,7 +91,7 @@ const Requests = () => {
           desiredStartDate: r.desired_start_date ?? undefined,
           desiredEndDate: r.desired_end_date ?? undefined,
         };
-      }).filter((r: any) => r.status.toLowerCase() === "open");
+      }).filter((r) => r.status.toLowerCase() === "open");
       setRequests(mapped);
       setLoading(false);
     };
@@ -117,6 +111,7 @@ const Requests = () => {
     return matchesSearch && matchesCategory && matchesCity && matchesRating;
   });
 
+  // Sort by priority city: matching city first, then the rest
   const sorted = priorityCity
     ? [...filtered].sort((a, b) => {
         const aMatch = a.city.toLowerCase() === priorityCity.toLowerCase() ? 0 : 1;
@@ -134,27 +129,21 @@ const Requests = () => {
   const handleCitySelect = (city: string) => {
     setPriorityCity(city);
     setCityChosen(true);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(CITY_STORAGE_KEY, city);
-      localStorage.setItem(CITY_CHOSEN_KEY, "true");
-    }
+    localStorage.setItem(CITY_STORAGE_KEY, city);
+    localStorage.setItem(CITY_CHOSEN_KEY, "true");
   };
 
   const handleSkipCity = () => {
     setPriorityCity(null);
     setCityChosen(true);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(CITY_STORAGE_KEY);
-      localStorage.setItem(CITY_CHOSEN_KEY, "true");
-    }
+    localStorage.removeItem(CITY_STORAGE_KEY);
+    localStorage.setItem(CITY_CHOSEN_KEY, "true");
   };
 
   const handleChangeCity = () => {
     setCityChosen(false);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(CITY_CHOSEN_KEY);
-      localStorage.removeItem(CITY_STORAGE_KEY);
-    }
+    localStorage.removeItem(CITY_CHOSEN_KEY);
+    localStorage.removeItem(CITY_STORAGE_KEY);
   };
 
   // City picker overlay
@@ -368,5 +357,5 @@ const Requests = () => {
 };
 
 
-
-export const Route = createFileRoute("/requests/")({ component: Requests });
+import { createFileRoute } from "@tanstack/react-router";
+export const Route = createFileRoute("/requests")({ component: Requests });

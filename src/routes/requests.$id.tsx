@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-const db = supabase as any;
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useParams, Link, useNavigate } from "@tanstack/react-router";
 import {
   MapPin, Clock, DollarSign, ArrowLeft, MessageSquare, User,
   HardHat, Send, CheckCircle2, Building2, Loader2, Star, CalendarIcon
@@ -53,7 +51,7 @@ interface Offer {
 }
 
 const RequestDetail = () => {
-  const { id } = Route.useParams();
+  const { id } = useParams({ strict: false }) as { id: string };
   const navigate = useNavigate();
   const { effectiveRole } = useRole();
   const { user } = useAuth();
@@ -81,7 +79,7 @@ const RequestDetail = () => {
     if (!id) return;
 
     const fetchRequest = async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("service_requests")
         .select("*")
         .eq("id", id)
@@ -94,43 +92,43 @@ const RequestDetail = () => {
       setRequest(data as ServiceRequest);
 
       // Fetch owner average rating
-      const { data: ownerRatings } = await db
+      const { data: ownerRatings } = await supabase
         .from("ratings")
         .select("rating")
         .eq("rated_user_id", data.user_id);
 
       if (ownerRatings && ownerRatings.length > 0) {
-        const avg = ownerRatings.reduce((s: number, r: any) => s + r.rating, 0) / ownerRatings.length;
+        const avg = ownerRatings.reduce((s, r) => s + r.rating, 0) / ownerRatings.length;
         setOwnerAvgRating(avg);
       }
 
       // Fetch offers
       if (user) {
-        const { data: offersData } = await db
+        const { data: offersData } = await supabase
           .from("offers")
           .select("*")
           .eq("request_id", id)
           .order("created_at", { ascending: true });
 
         if (offersData && offersData.length > 0) {
-          const workerIds = offersData.map((o: any) => o.worker_id);
+          const workerIds = offersData.map((o) => o.worker_id);
 
           // Fetch profiles + avg ratings for workers in parallel
           const [profilesRes, ratingsRes, existingRatingsRes] = await Promise.all([
-            db.from("profiles").select("user_id, display_name").in("user_id", workerIds),
-            db.from("ratings").select("rated_user_id, rating").in("rated_user_id", workerIds),
+            supabase.from("profiles").select("user_id, display_name").in("user_id", workerIds),
+            supabase.from("ratings").select("rated_user_id, rating").in("rated_user_id", workerIds),
             // Fetch ratings the current user already gave to workers on this request
-            db.from("ratings").select("rated_user_id, rating").eq("rated_by_user_id", user.id).eq("request_id", id),
+            supabase.from("ratings").select("rated_user_id, rating").eq("rated_by_user_id", user.id).eq("request_id", id),
           ]);
 
           const profileMap: Record<string, string> = {};
-          profilesRes.data?.forEach((p: any) => {
+          profilesRes.data?.forEach((p) => {
             profileMap[p.user_id] = p.display_name || "Worker";
           });
 
           // Compute avg rating per worker
           const ratingAcc: Record<string, { sum: number; count: number }> = {};
-          ratingsRes.data?.forEach((r: any) => {
+          ratingsRes.data?.forEach((r) => {
             if (!ratingAcc[r.rated_user_id]) ratingAcc[r.rated_user_id] = { sum: 0, count: 0 };
             ratingAcc[r.rated_user_id].sum += r.rating;
             ratingAcc[r.rated_user_id].count += 1;
@@ -138,13 +136,13 @@ const RequestDetail = () => {
 
           // Existing ratings by current user
           const existingMap: Record<string, number> = {};
-          existingRatingsRes.data?.forEach((r: any) => {
+          existingRatingsRes.data?.forEach((r) => {
             existingMap[r.rated_user_id] = r.rating;
           });
           setRatingWorkerMap(existingMap);
 
           setOffers(
-            offersData.map((o: any) => ({
+            offersData.map((o) => ({
               ...o,
               price: Number(o.price),
               worker_name: profileMap[o.worker_id] || "Worker",
@@ -170,7 +168,7 @@ const RequestDetail = () => {
     }
 
     setSubmittingOffer(true);
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from("offers")
       .insert({
         request_id: id,
@@ -207,7 +205,7 @@ const RequestDetail = () => {
 
     if (existing) {
       // Update
-      const res = await db
+      const res = await supabase
         .from("ratings")
         .update({ rating })
         .eq("rated_user_id", workerId)
@@ -216,7 +214,7 @@ const RequestDetail = () => {
       error = res.error;
     } else {
       // Insert
-      const res = await db
+      const res = await supabase
         .from("ratings")
         .insert({
           rated_user_id: workerId,
@@ -252,7 +250,7 @@ const RequestDetail = () => {
 
     setAcceptingOfferId(offer.id);
 
-    const { data, error } = await db.functions.invoke("accept-offer", {
+    const { data, error } = await supabase.functions.invoke("accept-offer", {
       body: {
         offerId: offer.id,
         requestId: request.id,
@@ -530,11 +528,11 @@ const RequestDetail = () => {
                 const newWorker = side === "worker" ? true : workerDone;
 
                 if (newCustomer && newWorker) {
-                  await db.from("service_requests").update({ ...update, status: "completed" }).eq("id", request.id);
+                  await supabase.from("service_requests").update({ ...update, status: "completed" }).eq("id", request.id);
                   setRequest({ ...request, ...update, status: "completed" });
                   toast.success("Both confirmed! Request is now completed and archived.");
                 } else {
-                  await db.from("service_requests").update(update).eq("id", request.id);
+                  await supabase.from("service_requests").update(update).eq("id", request.id);
                   setRequest({ ...request, ...update });
                   toast.success("Confirmed! Waiting for the other party.");
                 }
@@ -638,11 +636,11 @@ const RequestDetail = () => {
                 <Button variant="hero" className="w-full gap-2" onClick={async () => {
                   const newCustomer = request.customer_confirmed_complete;
                   if (newCustomer) {
-                    await db.from("service_requests").update({ worker_confirmed_complete: true, status: "completed" }).eq("id", request.id);
+                    await supabase.from("service_requests").update({ worker_confirmed_complete: true, status: "completed" }).eq("id", request.id);
                     setRequest({ ...request, worker_confirmed_complete: true, status: "completed" });
                     toast.success("Both confirmed! Request is now completed and archived.");
                   } else {
-                    await db.from("service_requests").update({ worker_confirmed_complete: true }).eq("id", request.id);
+                    await supabase.from("service_requests").update({ worker_confirmed_complete: true }).eq("id", request.id);
                     setRequest({ ...request, worker_confirmed_complete: true });
                     toast.success("Marked as complete. Waiting for customer confirmation.");
                   }
@@ -679,5 +677,5 @@ const RequestDetail = () => {
 };
 
 
-
+import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/requests/$id")({ component: RequestDetail });

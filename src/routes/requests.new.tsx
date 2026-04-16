@@ -1,9 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-const db = supabase as any;
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -72,15 +70,15 @@ const CreateRequest = () => {
       for (const file of photos) {
         const ext = file.name.split(".").pop();
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await db.storage
+        const { error: uploadError } = await supabase.storage
           .from("request-photos")
           .upload(path, file);
         if (uploadError) throw uploadError;
-        const { data: urlData } = db.storage.from("request-photos").getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from("request-photos").getPublicUrl(path);
         photoUrls.push(urlData.publicUrl);
       }
 
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("service_requests")
         .insert({
           user_id: user.id,
@@ -100,7 +98,7 @@ const CreateRequest = () => {
 
       if (error) throw error;
       toast({ title: "Request posted!" });
-      navigate({ to: `/requests/${data.id}` } as any);
+      navigate(`/requests/${data.id}`);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -232,5 +230,5 @@ const CreateRequest = () => {
 };
 
 
-
+import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/requests/new")({ component: CreateRequest });
