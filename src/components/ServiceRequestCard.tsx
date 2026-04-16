@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, DollarSign, CalendarDays } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 import StarRating from "@/components/StarRating";
 
 export interface ServiceRequestData {
