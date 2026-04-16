@@ -363,4 +363,4 @@ const Requests = () => {
 
 
 import { createFileRoute } from "@tanstack/react-router";
-export const Route = createFileRoute("/requests")({ component: Requests });
+export const Route = createFileRoute("/requests/")({ component: Requests });
