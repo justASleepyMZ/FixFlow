@@ -76,7 +76,7 @@ const CreateRequest = () => {
           .from("request-photos")
           .upload(path, file);
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("request-photos").getPublicUrl(path);
+        const { data: urlData } = db.storage.from("request-photos").getPublicUrl(path);
         photoUrls.push(urlData.publicUrl);
       }
 

@@ -117,10 +117,10 @@ const RequestDetail = () => {
 
           // Fetch profiles + avg ratings for workers in parallel
           const [profilesRes, ratingsRes, existingRatingsRes] = await Promise.all([
-            supabase.from("profiles").select("user_id, display_name").in("user_id", workerIds),
-            supabase.from("ratings").select("rated_user_id, rating").in("rated_user_id", workerIds),
+            db.from("profiles").select("user_id, display_name").in("user_id", workerIds),
+            db.from("ratings").select("rated_user_id, rating").in("rated_user_id", workerIds),
             // Fetch ratings the current user already gave to workers on this request
-            supabase.from("ratings").select("rated_user_id, rating").eq("rated_by_user_id", user.id).eq("request_id", id),
+            db.from("ratings").select("rated_user_id, rating").eq("rated_by_user_id", user.id).eq("request_id", id),
           ]);
 
           const profileMap: Record<string, string> = {};
