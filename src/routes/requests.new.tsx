@@ -98,7 +98,7 @@ const CreateRequest = () => {
 
       if (error) throw error;
       toast({ title: "Request posted!" });
-      navigate(`/requests/${data.id}`);
+      navigate({ to: "/requests/$id", params: { id: data.id } } as any);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
