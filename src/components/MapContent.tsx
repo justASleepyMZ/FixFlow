@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L, { type Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
-const db = supabase as any;
 import { Loader2, MapPin } from "lucide-react";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -70,7 +69,7 @@ const buildPopupContent = (request: MapRequest) => `
   </div>
 `;
 
-const MapContent = () => {
+const MapPage = () => {
   const [requests, setRequests] = useState<MapRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
@@ -124,7 +123,7 @@ const MapContent = () => {
 
   useEffect(() => {
     const fetchRequests = async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("service_requests")
         .select("id, title, city, budget")
         .eq("status", "open")
@@ -139,7 +138,7 @@ const MapContent = () => {
       const cityMarkerCounts: Record<string, number> = {};
 
       const mappedRequests: MapRequest[] = (data ?? [])
-        .map((request: any) => {
+        .map((request) => {
           if (!request.city) return null;
 
           const cityKey = request.city.toLowerCase();
@@ -162,7 +161,7 @@ const MapContent = () => {
             position: [baseCoords[0] + latOffset, baseCoords[1] + lngOffset] as [number, number],
           };
         })
-        .filter((request: any): request is MapRequest => Boolean(request));
+        .filter((request): request is MapRequest => Boolean(request));
 
       setRequests(mappedRequests);
       setLoading(false);
@@ -185,32 +184,38 @@ const MapContent = () => {
   }, [requests]);
 
   return (
-    <>
-      <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold md:text-3xl">Requests Map</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Open requests only, centered on {selectedCity ?? "Astana"}.
-          </p>
+    <div className="flex min-h-screen flex-col bg-gradient-surface">
+      <Navbar />
+
+      <div className="container flex-1 py-6">
+        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold md:text-3xl">Requests Map</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Open requests only, centered on {selectedCity ?? "Astana"}.
+            </p>
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 text-primary" />
+            {requests.length} marker{requests.length === 1 ? "" : "s"}
+          </div>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4 text-primary" />
-          {requests.length} marker{requests.length === 1 ? "" : "s"}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border shadow-card" style={{ height: "calc(100vh - 220px)" }}>
+            <div ref={mapElementRef} className="h-full w-full" aria-label="Open requests map" />
+          </div>
+        )}
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-xl border shadow-card" style={{ height: "calc(100vh - 220px)" }}>
-          <div ref={mapElementRef} className="h-full w-full" aria-label="Open requests map" />
-        </div>
-      )}
-    </>
+      <Footer />
+    </div>
   );
 };
 
-export default MapContent;
+export default MapPage;
