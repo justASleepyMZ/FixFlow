@@ -11,7 +11,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-type AppRole = string;
+type AppRole = "user" | "worker" | "company";
 
 const roles: { value: AppRole; label: string; icon: React.ElementType; desc: string }[] = [
   { value: "user", label: "Customer", icon: User, desc: "I need repairs" },
@@ -59,7 +59,7 @@ const Register = () => {
       toast.error(error.message);
     } else {
       toast.success("Account created successfully!");
-      navigate({ to: "/" });
+      navigate({ to: "/" } as any);
     }
   };
 

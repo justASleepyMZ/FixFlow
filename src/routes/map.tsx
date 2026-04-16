@@ -127,7 +127,7 @@ const MapPage = () => {
 
   useEffect(() => {
     const fetchRequests = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("service_requests")
         .select("id, title, city, budget")
         .eq("status", "open")

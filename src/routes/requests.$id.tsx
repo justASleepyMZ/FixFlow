@@ -81,7 +81,7 @@ const RequestDetail = () => {
     if (!id) return;
 
     const fetchRequest = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("service_requests")
         .select("*")
         .eq("id", id)
@@ -94,7 +94,7 @@ const RequestDetail = () => {
       setRequest(data as ServiceRequest);
 
       // Fetch owner average rating
-      const { data: ownerRatings } = await supabase
+      const { data: ownerRatings } = await db
         .from("ratings")
         .select("rating")
         .eq("rated_user_id", data.user_id);
@@ -106,7 +106,7 @@ const RequestDetail = () => {
 
       // Fetch offers
       if (user) {
-        const { data: offersData } = await supabase
+        const { data: offersData } = await db
           .from("offers")
           .select("*")
           .eq("request_id", id)
@@ -170,7 +170,7 @@ const RequestDetail = () => {
     }
 
     setSubmittingOffer(true);
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("offers")
       .insert({
         request_id: id,
@@ -207,7 +207,7 @@ const RequestDetail = () => {
 
     if (existing) {
       // Update
-      const res = await supabase
+      const res = await db
         .from("ratings")
         .update({ rating })
         .eq("rated_user_id", workerId)
@@ -216,7 +216,7 @@ const RequestDetail = () => {
       error = res.error;
     } else {
       // Insert
-      const res = await supabase
+      const res = await db
         .from("ratings")
         .insert({
           rated_user_id: workerId,
@@ -284,7 +284,7 @@ const RequestDetail = () => {
     );
 
     toast.success("Offer accepted! Redirecting to My Requests.");
-    navigate({ to: "/my-requests" });
+    navigate({ to: "/my-requests" } as any);
     setAcceptingOfferId(null);
   };
 

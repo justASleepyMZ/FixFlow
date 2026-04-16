@@ -44,7 +44,7 @@ const Requests = () => {
 
   useEffect(() => {
     const fetchRequests = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("service_requests")
         .select("*")
         .order("created_at", { ascending: false });
@@ -61,7 +61,7 @@ const Requests = () => {
 
       // Fetch poster average ratings
       const userIds = [...new Set((data || []).map((r) => r.user_id))];
-      const { data: ratingsData } = await supabase
+      const { data: ratingsData } = await db
         .from("ratings")
         .select("rated_user_id, rating")
         .in("rated_user_id", userIds);

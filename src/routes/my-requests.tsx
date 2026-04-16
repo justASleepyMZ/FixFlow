@@ -49,21 +49,21 @@ const MyRequests = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate({ to: "/login" });
+    if (!authLoading && !user) navigate({ to: "/login" } as any);
   }, [authLoading, user, navigate]);
 
   useEffect(() => {
     if (!user) return;
     const fetch = async () => {
       // Fetch requests created by the user
-      const { data: ownRequests } = await supabase
+      const { data: ownRequests } = await db
         .from("service_requests")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       // Fetch requests where the user has an accepted offer (worker jobs)
-      const { data: acceptedOffers } = await supabase
+      const { data: acceptedOffers } = await db
         .from("offers")
         .select("request_id")
         .eq("worker_id", user.id)
@@ -72,7 +72,7 @@ const MyRequests = () => {
       let workerRequests: MyRequest[] = [];
       if (acceptedOffers && acceptedOffers.length > 0) {
         const requestIds = acceptedOffers.map((o) => o.request_id);
-        const { data: workerData } = await supabase
+        const { data: workerData } = await db
           .from("service_requests")
           .select("*")
           .in("id", requestIds)
