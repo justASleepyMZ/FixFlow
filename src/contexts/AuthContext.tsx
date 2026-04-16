@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkSessionExpiry = (sess: Session | null) => {
     if (!sess) return false;
+    if (typeof window === "undefined") return false;
     const loginTime = localStorage.getItem("fixflow_login_time");
     if (loginTime && Date.now() - parseInt(loginTime) > SESSION_DURATION_MS) {
       supabase.auth.signOut();
@@ -123,7 +124,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
       options: {
         data: { display_name: displayName },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
       },
     });
     if (error) return { error };
@@ -149,21 +150,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
 
-    localStorage.setItem("fixflow_login_time", Date.now().toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fixflow_login_time", Date.now().toString());
+    }
     await fetchUserData(userId);
     return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error) {
+    if (!error && typeof window !== "undefined") {
       localStorage.setItem("fixflow_login_time", Date.now().toString());
     }
     return { error };
   };
 
   const signOut = async () => {
-    localStorage.removeItem("fixflow_login_time");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("fixflow_login_time");
+    }
     await supabase.auth.signOut();
   };
 

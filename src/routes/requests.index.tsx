@@ -30,8 +30,13 @@ const Requests = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [priorityCity, setPriorityCity] = useState<string | null>(() => localStorage.getItem(CITY_STORAGE_KEY));
-  const [cityChosen, setCityChosen] = useState(() => localStorage.getItem(CITY_CHOSEN_KEY) === "true");
+  const [priorityCity, setPriorityCity] = useState<string | null>(null);
+  const [cityChosen, setCityChosen] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setPriorityCity(localStorage.getItem(CITY_STORAGE_KEY));
+    setCityChosen(localStorage.getItem(CITY_CHOSEN_KEY) === "true");
+  }, []);
   const [minRating, setMinRating] = useState(0);
   const { effectiveRole } = useRole();
   const { user } = useAuth();
