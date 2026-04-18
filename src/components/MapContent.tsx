@@ -199,15 +199,14 @@ const MapPage = () => {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-xl border shadow-card" style={{ height: "calc(100vh - 220px)" }}>
-          <div ref={mapElementRef} className="h-full w-full" aria-label="Open requests map" />
-        </div>
-      )}
+      <div className="relative overflow-hidden rounded-xl border shadow-card" style={{ height: "calc(100vh - 220px)", minHeight: "400px" }}>
+        <div ref={mapElementRef} className="h-full w-full" aria-label="Open requests map" />
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
