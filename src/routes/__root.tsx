@@ -87,6 +87,7 @@ function RootComponent() {
       <AuthProvider>
         <RoleProvider>
           <Toaster />
+          <Sonner />
           <Outlet />
         </RoleProvider>
       </AuthProvider>
