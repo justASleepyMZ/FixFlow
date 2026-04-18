@@ -4,6 +4,7 @@ import type { User, Session } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
+type SignUpMode = "signed_up" | "signed_in" | null;
 
 interface Profile {
   display_name: string | null;
@@ -26,7 +27,7 @@ interface AuthContextType {
   companyProfile: CompanyProfile | null;
   userRole: AppRole | null;
   loading: boolean;
-  signUp: (email: string, password: string, displayName: string, phone: string, role: AppRole, companyData?: Partial<CompanyProfile>) => Promise<{ error: Error | null; mode: "signed_up" | "signed_in" | null }>;
+  signUp: (email: string, password: string, displayName: string, phone: string, role: AppRole, companyData?: Partial<CompanyProfile>) => Promise<{ error: Error | null; mode: SignUpMode }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -107,7 +108,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     phone: string,
     role: AppRole,
     companyData?: Partial<CompanyProfile>
-  ) => {
+  ): Promise<{ error: Error | null; mode: SignUpMode }> => {
     const normalizedEmail = normalizeEmail(email);
 
     const { data, error } = await supabase.auth.signUp({
