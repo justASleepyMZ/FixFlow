@@ -47,7 +47,7 @@ const Register = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await signUp(email, password, name, phone, role, role === "company" ? {
+    const { error, mode } = await signUp(email, password, name, phone, role, role === "company" ? {
       company_name: companyName,
       company_description: companyDesc || null,
       company_address: companyAddress || null,
@@ -58,7 +58,7 @@ const Register = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Account created successfully!");
+      toast.success(mode === "signed_in" ? "Account already existed, so you were signed in." : "Account created successfully!");
       navigate({ to: "/" } as any);
     }
   };
