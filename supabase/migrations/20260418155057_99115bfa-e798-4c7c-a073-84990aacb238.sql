@@ -1,0 +1,1 @@
+DELETE FROM auth.users WHERE email = '231117@astanait.edu.kz';
