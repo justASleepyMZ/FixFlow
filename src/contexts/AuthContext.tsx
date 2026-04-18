@@ -39,8 +39,6 @@ export const useAuth = () => {
   return ctx;
 };
 
-const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -51,8 +49,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserData = async (userId: string) => {
     const [profileRes, roleRes, companyRes] = await Promise.all([
-      supabase.from("profiles").select("display_name, avatar_url, phone").eq("user_id", userId).single(),
-      supabase.from("user_roles").select("role").eq("user_id", userId).single(),
+      supabase.from("profiles").select("display_name, avatar_url, phone").eq("user_id", userId).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       supabase.from("company_profiles").select("company_name, company_description, company_address, tax_id, website").eq("user_id", userId).maybeSingle(),
     ]);
     setProfile(profileRes.data);
@@ -60,22 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setCompanyProfile(companyRes.data);
   };
 
-  const checkSessionExpiry = (sess: Session | null) => {
-    if (!sess) return false;
-    if (typeof window === "undefined") return false;
-    const loginTime = localStorage.getItem("fixflow_login_time");
-    if (loginTime && Date.now() - parseInt(loginTime) > SESSION_DURATION_MS) {
-      supabase.auth.signOut();
-      localStorage.removeItem("fixflow_login_time");
-      return true; // expired
-    }
-    return false;
-  };
-
   useEffect(() => {
-    // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
-      if (sess && checkSessionExpiry(sess)) return;
       setSession(sess);
       setUser(sess?.user ?? null);
       if (sess?.user) {
@@ -88,26 +72,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    // THEN check existing session
     supabase.auth.getSession().then(({ data: { session: sess } }) => {
-      if (sess && checkSessionExpiry(sess)) {
-        setLoading(false);
-        return;
-      }
       setSession(sess);
       setUser(sess?.user ?? null);
       if (sess?.user) fetchUserData(sess.user.id);
       setLoading(false);
     });
 
-    // Periodic session expiry check (every minute)
-    const interval = setInterval(() => {
-      checkSessionExpiry(session);
-    }, 60_000);
-
     return () => {
       subscription.unsubscribe();
-      clearInterval(interval);
     };
   }, []);
 
@@ -124,7 +97,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
       options: {
         data: { display_name: displayName },
-        emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
+        emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : undefined,
       },
     });
     if (error) return { error };
@@ -132,13 +105,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = data.user?.id;
     if (!userId) return { error: new Error("Signup failed") };
 
-    // Update profile phone
-    await supabase.from("profiles").update({ phone }).eq("user_id", userId);
+    // Profile auto-created by trigger; just update phone
+    if (phone) {
+      await supabase.from("profiles").update({ phone }).eq("user_id", userId);
+    }
 
     // Insert role
-    await supabase.from("user_roles").insert({ user_id: userId, role });
+    const { error: roleErr } = await supabase.from("user_roles").insert({ user_id: userId, role });
+    if (roleErr) console.error("role insert", roleErr);
 
-    // Insert company profile if company role
     if (role === "company" && companyData?.company_name) {
       await supabase.from("company_profiles").insert({
         user_id: userId,
@@ -150,25 +125,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fixflow_login_time", Date.now().toString());
-    }
     await fetchUserData(userId);
     return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && typeof window !== "undefined") {
-      localStorage.setItem("fixflow_login_time", Date.now().toString());
-    }
     return { error };
   };
 
   const signOut = async () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("fixflow_login_time");
-    }
     await supabase.auth.signOut();
   };
 
