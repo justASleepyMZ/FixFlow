@@ -3,16 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Wrench, Menu, X, User, HardHat, ShieldCheck, LogOut, Building2 } from "lucide-react";
 import { useState } from "react";
-import { useRole, type GuestRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const roleConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   user: { label: "Customer", icon: User, color: "bg-primary text-primary-foreground" },
@@ -24,24 +15,17 @@ const roleConfig: Record<string, { label: string; icon: React.ElementType; color
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { role, setRole } = useRole();
-  const { user, profile, userRole, signOut, loading } = useAuth();
+  const { user, profile, userRole, signOut } = useAuth();
 
   const links = [
     { to: "/", label: "Home" },
     { to: "/requests", label: "Browse Requests" },
     ...(user ? [{ to: "/my-requests", label: "My Requests" }] : []),
+    ...(userRole === "admin" ? [{ to: "/admin", label: "Admin" }] : []),
     { to: "/map", label: "Map" },
   ];
 
-  const handleQuickRole = (r: GuestRole) => {
-    setRole(r);
-    setMobileOpen(false);
-  };
-
-  // Determine the active role: authenticated role takes priority
-  const activeRole = user ? userRole : role;
-  const currentRole = activeRole ? roleConfig[activeRole] : null;
+  const currentRole = userRole ? roleConfig[userRole] : null;
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
