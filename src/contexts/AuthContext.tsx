@@ -105,17 +105,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = data.user?.id;
     if (!userId) return { error: new Error("Signup failed") };
 
-    // Profile auto-created by trigger; just update phone
+    // Wait for session so RLS-protected inserts work (auto-confirm should give us one)
+    let session = data.session;
+    if (!session) {
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInErr) return { error: signInErr };
+      session = signInData.session;
+    }
+
     if (phone) {
       await supabase.from("profiles").update({ phone }).eq("user_id", userId);
     }
 
-    // Insert role
     const { error: roleErr } = await supabase.from("user_roles").insert({ user_id: userId, role });
-    if (roleErr) console.error("role insert", roleErr);
+    if (roleErr) {
+      console.error("role insert", roleErr);
+      return { error: new Error(`Failed to set role: ${roleErr.message}`) };
+    }
 
     if (role === "company" && companyData?.company_name) {
-      await supabase.from("company_profiles").insert({
+      const { error: compErr } = await supabase.from("company_profiles").insert({
         user_id: userId,
         company_name: companyData.company_name,
         company_description: companyData.company_description ?? null,
@@ -123,6 +132,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         tax_id: companyData.tax_id ?? null,
         website: companyData.website ?? null,
       });
+      if (compErr) console.error("company insert", compErr);
     }
 
     await fetchUserData(userId);
