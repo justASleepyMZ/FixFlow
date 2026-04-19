@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, ImagePlus, Loader2, X, CalendarIcon } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, X, CalendarIcon, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { categories } from "@/data/mockData";
 import { Link } from "@tanstack/react-router";
@@ -36,6 +36,29 @@ const CreateRequest = () => {
   const [submitting, setSubmitting] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<{ min: number; max: number; recommended: number; reasoning: string } | null>(null);
+
+  const suggestPrice = async () => {
+    if (!title.trim() || !category) {
+      toast({ title: "Enter title and category first", variant: "destructive" });
+      return;
+    }
+    setSuggesting(true);
+    setSuggestion(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-price", {
+        body: { title: title.trim(), category, description: description.trim(), city: city.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setSuggestion(data);
+    } catch (err: any) {
+      toast({ title: "AI error", description: err.message, variant: "destructive" });
+    } finally {
+      setSuggesting(false);
+    }
+  };
 
   const handlePhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -184,8 +207,29 @@ const CreateRequest = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="budget">Budget (₸)</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="budget">Budget (₸)</Label>
+                <Button type="button" variant="outline" size="sm" onClick={suggestPrice} disabled={suggesting} className="gap-1.5 h-8">
+                  {suggesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                  AI Suggest
+                </Button>
+              </div>
               <Input id="budget" type="number" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="Your expected price" />
+              {suggestion && (
+                <div className="rounded-lg border bg-accent/40 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <p className="text-xs text-muted-foreground">AI estimate (₸)</p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">{suggestion.min.toLocaleString()} – {suggestion.max.toLocaleString()}</span>
+                      <span className="font-semibold text-primary">{suggestion.recommended.toLocaleString()} ₸</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{suggestion.reasoning}</p>
+                  <Button type="button" size="sm" variant="secondary" className="h-7" onClick={() => setBudget(String(suggestion.recommended))}>
+                    Use {suggestion.recommended.toLocaleString()} ₸
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
