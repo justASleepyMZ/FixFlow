@@ -49,7 +49,7 @@ const AiRecommendations = () => {
             </div>
             <h2 className="font-display text-2xl font-bold md:text-3xl">For You</h2>
           </div>
-          <p className="mt-2 text-muted-foreground">AI-подобранные услуги под ваш сезон и интересы</p>
+          <p className="mt-2 text-muted-foreground">AI-picked services based on your season and interests</p>
         </div>
       </div>
 
@@ -61,14 +61,14 @@ const AiRecommendations = () => {
         }}
       >
         <Input
-          placeholder="Опишите задачу, например: «течёт кран»"
+          placeholder='Describe your task, e.g. "leaking faucet"'
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           disabled={loading}
         />
         <Button type="submit" variant="hero" disabled={loading} className="gap-1.5">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          Подобрать
+          Recommend
         </Button>
       </form>
 
