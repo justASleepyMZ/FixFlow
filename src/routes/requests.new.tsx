@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, ImagePlus, Loader2, X, CalendarIcon } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, X, CalendarIcon, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { categories } from "@/data/mockData";
 import { Link } from "@tanstack/react-router";
