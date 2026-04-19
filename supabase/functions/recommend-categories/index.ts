@@ -55,7 +55,7 @@ ${query ? `User interest: ${query}` : "No specific query — recommend based on 
                     type: "object",
                     properties: {
                       category: { type: "string", description: "Exact category name from the list" },
-                      reason: { type: "string", description: "Short reason in Russian, max 60 chars" },
+                      reason: { type: "string", description: "Short reason in English, max 60 chars" },
                     },
                     required: ["category", "reason"],
                     additionalProperties: false,

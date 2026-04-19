@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `You are a pricing expert for home services and repair work in Kazakhstan. Estimate fair market prices in Kazakhstani Tenge (₸).
 Return ONLY valid JSON in this exact shape, no markdown, no explanations outside JSON:
-{"min": <number>, "max": <number>, "recommended": <number>, "reasoning": "<short explanation in Russian, max 2 sentences>"}
+{"min": <number>, "max": <number>, "recommended": <number>, "reasoning": "<short explanation in English, max 2 sentences>"}
 Use realistic 2025 market rates. Min/max should reflect typical price range; recommended is the most likely fair price.`;
 
     const userPrompt = `Service category: ${category}
