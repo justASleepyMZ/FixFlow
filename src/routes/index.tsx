@@ -7,6 +7,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Shield, MessageSquare, Star, CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AiRecommendations from "@/components/AiRecommendations";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -55,6 +56,9 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* AI Recommendations */}
+      <AiRecommendations />
 
       {/* Categories */}
       <section className="container py-16">
