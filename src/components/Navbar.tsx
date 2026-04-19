@@ -20,7 +20,7 @@ const Navbar = () => {
   const links = [
     { to: "/", label: "Home" },
     { to: "/requests", label: "Browse Requests" },
-    ...(user ? [{ to: "/my-requests", label: "My Requests" }] : []),
+    ...(user && userRole !== "admin" ? [{ to: "/my-requests", label: "My Requests" }] : []),
     ...(userRole === "admin" ? [{ to: "/admin", label: "Admin" }] : []),
     { to: "/map", label: "Map" },
   ];
