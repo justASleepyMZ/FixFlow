@@ -10,6 +10,7 @@ interface Profile {
   display_name: string | null;
   avatar_url: string | null;
   phone: string | null;
+  certificate_url: string | null;
 }
 
 interface CompanyProfile {
