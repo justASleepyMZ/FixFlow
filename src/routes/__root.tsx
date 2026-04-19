@@ -39,9 +39,13 @@ export const Route = createRootRoute({
       { name: "description", content: "Post repair requests, get competitive offers from verified workers, and negotiate the best price." },
       { name: "author", content: "FixFlow" },
       { property: "og:title", content: "FixFlow — Find Repair Pros at Your Price" },
-      { property: "og:description", content: "Post repair requests, get competitive offers from verified workers." },
+      { property: "og:description", content: "Post repair requests, get competitive offers from verified workers, and negotiate the best price." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "FixFlow — Find Repair Pros at Your Price" },
+      { name: "twitter:description", content: "Post repair requests, get competitive offers from verified workers, and negotiate the best price." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/eb224d4d-c744-4526-a295-c2a37163e1d6/id-preview-1b26c5b6--46d179a0-03c5-46d3-9902-5ed453b63014.lovable.app-1776586766177.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/eb224d4d-c744-4526-a295-c2a37163e1d6/id-preview-1b26c5b6--46d179a0-03c5-46d3-9902-5ed453b63014.lovable.app-1776586766177.png" },
     ],
     links: [
       {
