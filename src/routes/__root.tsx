@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleProvider } from "@/contexts/RoleContext";
+import SupportChat from "@/components/SupportChat";
 
 import appCss from "../styles.css?url";
 
@@ -89,6 +90,7 @@ function RootComponent() {
           <Toaster />
           <Sonner />
           <Outlet />
+          <SupportChat />
         </RoleProvider>
       </AuthProvider>
     </TooltipProvider>
