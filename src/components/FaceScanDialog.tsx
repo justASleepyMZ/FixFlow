@@ -148,10 +148,10 @@ export const FaceScanDialog = ({ open, onOpenChange, onVerified }: FaceScanDialo
         <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
           <video
             ref={videoRef}
+            autoPlay
             playsInline
             muted
-            className="h-full w-full object-cover"
-            style={{ display: streaming ? "block" : "none" }}
+            className={`h-full w-full object-cover ${streaming ? "block" : "hidden"}`}
           />
           {!streaming && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
