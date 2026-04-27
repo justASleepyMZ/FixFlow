@@ -33,22 +33,35 @@ export const FaceScanDialog = ({ open, onOpenChange, onVerified }: FaceScanDialo
   const startCamera = async () => {
     setStarting(true);
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera API not available in this browser.");
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 640, height: 480 },
+        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
         audio: false,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
       setStreaming(true);
-    } catch (err: any) {
-      toast({
-        title: "Camera access denied",
-        description: err.message || "Please allow camera access to verify your face.",
-        variant: "destructive",
+      // Attach stream after state update so the <video> is mounted/visible
+      requestAnimationFrame(async () => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.srcObject = stream;
+        video.muted = true;
+        video.playsInline = true;
+        try {
+          await video.play();
+        } catch {
+          /* autoplay may need user gesture; ignore */
+        }
       });
+    } catch (err: any) {
+      const name = err?.name;
+      let description = err?.message || "Please allow camera access to verify your face.";
+      if (name === "NotAllowedError") description = "Permission denied. Allow camera access in your browser settings.";
+      else if (name === "NotFoundError") description = "No camera found on this device.";
+      else if (name === "NotReadableError") description = "Camera is in use by another application.";
+      toast({ title: "Camera access denied", description, variant: "destructive" });
     } finally {
       setStarting(false);
     }
@@ -135,10 +148,10 @@ export const FaceScanDialog = ({ open, onOpenChange, onVerified }: FaceScanDialo
         <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
           <video
             ref={videoRef}
+            autoPlay
             playsInline
             muted
-            className="h-full w-full object-cover"
-            style={{ display: streaming ? "block" : "none" }}
+            className={`h-full w-full object-cover ${streaming ? "block" : "hidden"}`}
           />
           {!streaming && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
