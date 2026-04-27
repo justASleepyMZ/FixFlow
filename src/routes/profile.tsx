@@ -45,6 +45,8 @@ const Profile = () => {
   const [website, setWebsite] = useState("");
   const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
   const [uploadingCert, setUploadingCert] = useState(false);
+  const [faceVerified, setFaceVerified] = useState(false);
+  const [faceScanOpen, setFaceScanOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [avgRating, setAvgRating] = useState(0);
@@ -63,6 +65,7 @@ const Profile = () => {
       setDisplayName(profile.display_name ?? "");
       setPhone(profile.phone ?? "");
       setCertificateUrl(profile.certificate_url ?? null);
+      setFaceVerified(profile.face_verified ?? false);
     }
     if (companyProfile) {
       setCompanyName(companyProfile.company_name ?? "");
