@@ -11,6 +11,8 @@ interface Profile {
   avatar_url: string | null;
   phone: string | null;
   certificate_url: string | null;
+  face_verified: boolean | null;
+  face_image_url: string | null;
 }
 
 interface CompanyProfile {
@@ -67,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserData = async (userId: string) => {
     const [profileRes, roleRes, companyRes] = await Promise.all([
-      supabase.from("profiles").select("display_name, avatar_url, phone, certificate_url").eq("user_id", userId).maybeSingle(),
+      supabase.from("profiles").select("display_name, avatar_url, phone, certificate_url, face_verified, face_image_url").eq("user_id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       supabase.from("company_profiles").select("company_name, company_description, company_address, tax_id, website").eq("user_id", userId).maybeSingle(),
     ]);
