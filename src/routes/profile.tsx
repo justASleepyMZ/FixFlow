@@ -12,8 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Building2, HardHat, ShieldCheck, Save, Loader2, FileText, Upload, Trash2, ExternalLink, Award } from "lucide-react";
+import { User, Building2, HardHat, ShieldCheck, Save, Loader2, FileText, Upload, Trash2, ExternalLink, Award, ScanFace, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { FaceScanDialog } from "@/components/FaceScanDialog";
 
 const roleIcons: Record<string, React.ElementType> = {
   user: User,
