@@ -12,8 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Building2, HardHat, ShieldCheck, Save, Loader2, FileText, Upload, Trash2, ExternalLink, Award } from "lucide-react";
+import { User, Building2, HardHat, ShieldCheck, Save, Loader2, FileText, Upload, Trash2, ExternalLink, Award, ScanFace, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { FaceScanDialog } from "@/components/FaceScanDialog";
 
 const roleIcons: Record<string, React.ElementType> = {
   user: User,
@@ -44,6 +45,8 @@ const Profile = () => {
   const [website, setWebsite] = useState("");
   const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
   const [uploadingCert, setUploadingCert] = useState(false);
+  const [faceVerified, setFaceVerified] = useState(false);
+  const [faceScanOpen, setFaceScanOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [avgRating, setAvgRating] = useState(0);
@@ -62,6 +65,7 @@ const Profile = () => {
       setDisplayName(profile.display_name ?? "");
       setPhone(profile.phone ?? "");
       setCertificateUrl(profile.certificate_url ?? null);
+      setFaceVerified(profile.face_verified ?? false);
     }
     if (companyProfile) {
       setCompanyName(companyProfile.company_name ?? "");
@@ -262,6 +266,53 @@ const Profile = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Face Verification (workers & companies) */}
+        {isWorkerRole && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ScanFace className="h-5 w-5" />
+                Face Verification
+              </CardTitle>
+              <CardDescription>
+                Verify your identity with a quick face scan. Required to build customer trust.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setFaceScanOpen(true)}
+                className="group relative flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-border bg-muted/40 transition-all hover:border-primary hover:bg-primary/5"
+              >
+                {faceVerified ? (
+                  <>
+                    <ScanFace className="h-14 w-14 text-primary" />
+                    <span className="absolute -bottom-1 -right-1 rounded-full bg-background p-0.5">
+                      <CheckCircle2 className="h-7 w-7 text-secondary" />
+                    </span>
+                  </>
+                ) : (
+                  <ScanFace className="h-14 w-14 text-muted-foreground transition-colors group-hover:text-primary" />
+                )}
+              </button>
+              <p className="text-sm font-medium">
+                {faceVerified ? "Face verified" : "Scan Face"}
+              </p>
+              {faceVerified && (
+                <Button variant="outline" size="sm" onClick={() => setFaceScanOpen(true)}>
+                  Re-scan
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        <FaceScanDialog
+          open={faceScanOpen}
+          onOpenChange={setFaceScanOpen}
+          onVerified={() => setFaceVerified(true)}
+        />
 
         {/* Qualification Certificate (workers & companies) */}
         {isWorkerRole && (

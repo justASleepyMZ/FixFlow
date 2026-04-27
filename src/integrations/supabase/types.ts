@@ -129,6 +129,8 @@ export type Database = {
           certificate_url: string | null
           created_at: string
           display_name: string | null
+          face_image_url: string | null
+          face_verified: boolean
           id: string
           phone: string | null
           updated_at: string
@@ -139,6 +141,8 @@ export type Database = {
           certificate_url?: string | null
           created_at?: string
           display_name?: string | null
+          face_image_url?: string | null
+          face_verified?: boolean
           id?: string
           phone?: string | null
           updated_at?: string
@@ -149,6 +153,8 @@ export type Database = {
           certificate_url?: string | null
           created_at?: string
           display_name?: string | null
+          face_image_url?: string | null
+          face_verified?: boolean
           id?: string
           phone?: string | null
           updated_at?: string
