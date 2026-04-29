@@ -78,7 +78,8 @@ const Index = () => {
               custom={i * 0.5}
             >
               <Link
-                to={`/requests?category=${cat.name}`}
+                to="/requests"
+                search={{ category: cat.name } as any}
                 className="flex flex-col items-center gap-2 rounded-xl border bg-card p-4 shadow-card transition-all hover:shadow-card-hover hover:-translate-y-0.5"
               >
                 <span className="text-2xl">{cat.icon}</span>

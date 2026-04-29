@@ -86,7 +86,8 @@ const AiRecommendations = () => {
               transition={{ delay: i * 0.08 }}
             >
               <Link
-                to={`/requests?category=${rec.category}`}
+                to="/requests"
+                search={{ category: rec.category } as any}
                 className="group flex h-full flex-col gap-2 rounded-xl border bg-card p-4 shadow-card transition-all hover:shadow-card-hover hover:-translate-y-0.5"
               >
                 <div className="flex items-center justify-between">

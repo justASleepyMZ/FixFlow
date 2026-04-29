@@ -32,7 +32,8 @@ const statusColors: Record<string, string> = {
 const ServiceRequestCard = ({ request }: { request: ServiceRequestData }) => {
   return (
     <Link
-      to={`/requests/${request.id}`}
+      to="/requests/$id"
+      params={{ id: String(request.id) }}
       className="group block rounded-xl border bg-card shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-0.5"
     >
       {request.imageUrl && (
