@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Wrench, Menu, X, User, HardHat, ShieldCheck, LogOut, Building2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const roleConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   user: { label: "Customer", icon: User, color: "bg-primary text-primary-foreground" },
@@ -48,6 +49,7 @@ const Navbar = () => {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <LanguageSwitcher />
           {user ? (
             <>
               {currentRole && (
@@ -73,9 +75,12 @@ const Navbar = () => {
           )}
         </div>
 
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X /> : <Menu />}
-        </Button>
+        <div className="flex items-center gap-1 md:hidden">
+          <LanguageSwitcher />
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <X /> : <Menu />}
+          </Button>
+        </div>
       </div>
 
       {mobileOpen && (
