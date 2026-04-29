@@ -587,8 +587,7 @@ const RequestDetail = () => {
               <CardHeader><CardTitle className="text-lg">Budget</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex items-center gap-1 font-display text-3xl font-bold">
-                  <DollarSign className="h-6 w-6" />
-                  {request.budget ? Number(request.budget).toLocaleString() : "Negotiable"}
+                  {request.budget ? `${Number(request.budget).toLocaleString()} ₸` : "Negotiable"}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">Initial customer price</p>
               </CardContent>

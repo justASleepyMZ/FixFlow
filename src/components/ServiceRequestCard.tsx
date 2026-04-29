@@ -82,8 +82,7 @@ const ServiceRequestCard = ({ request }: { request: ServiceRequestData }) => {
 
         <div className="mt-3 flex items-center justify-between border-t pt-3">
           <span className="flex items-center gap-1 font-display text-lg font-bold text-foreground">
-            <DollarSign className="h-4 w-4" />
-            {request.price.toLocaleString()}
+            {request.price.toLocaleString()} ₸
           </span>
           <div className="flex items-center gap-2">
             {request.posterRating !== undefined && request.posterRating > 0 && (
