@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, Link, useNavigate } from "@tanstack/react-router";
 import {
-  MapPin, Clock, DollarSign, ArrowLeft, MessageSquare, User,
+  MapPin, Clock, ArrowLeft, MessageSquare, User,
   HardHat, Send, CheckCircle2, Building2, Loader2, Star, CalendarIcon
 } from "lucide-react";
 import { useRole } from "@/contexts/RoleContext";

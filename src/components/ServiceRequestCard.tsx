@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, DollarSign, CalendarDays } from "lucide-react";
+import { MapPin, Clock, CalendarDays } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import StarRating from "@/components/StarRating";
 
