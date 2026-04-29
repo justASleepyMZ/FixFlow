@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, Link, useNavigate } from "@tanstack/react-router";
 import {
-  MapPin, Clock, DollarSign, ArrowLeft, MessageSquare, User,
+  MapPin, Clock, ArrowLeft, MessageSquare, User,
   HardHat, Send, CheckCircle2, Building2, Loader2, Star, CalendarIcon
 } from "lucide-react";
 import { useRole } from "@/contexts/RoleContext";
@@ -587,8 +587,7 @@ const RequestDetail = () => {
               <CardHeader><CardTitle className="text-lg">Budget</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex items-center gap-1 font-display text-3xl font-bold">
-                  <DollarSign className="h-6 w-6" />
-                  {request.budget ? Number(request.budget).toLocaleString() : "Negotiable"}
+                  {request.budget ? `${Number(request.budget).toLocaleString()} ₸` : "Negotiable"}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">Initial customer price</p>
               </CardContent>

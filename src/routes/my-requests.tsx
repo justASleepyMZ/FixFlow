@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, MapPin, DollarSign, CalendarDays, Clock, ArrowRight } from "lucide-react";
+import { Loader2, MapPin, CalendarDays, Clock, ArrowRight } from "lucide-react";
 
 import { HardHat } from "lucide-react";
 
@@ -117,7 +117,7 @@ const MyRequests = () => {
                 <p className="mt-1 text-xs text-muted-foreground line-clamp-1">{req.description}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{req.city}</span>
-                  <span className="flex items-center gap-1"><DollarSign className="h-3 w-3" />{Number(req.budget).toLocaleString()}</span>
+                  <span className="flex items-center gap-1">{Number(req.budget).toLocaleString()} ₸</span>
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(req.created_at).toLocaleDateString()}</span>
                   {req.desired_start_date && (
                     <span className="flex items-center gap-1">
