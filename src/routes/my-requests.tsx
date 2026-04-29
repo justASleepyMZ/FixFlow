@@ -97,7 +97,7 @@ const MyRequests = () => {
   const RequestCard = ({ req }: { req: MyRequest }) => {
     const cfg = statusConfig[req.status] || statusConfig.open;
     return (
-      <Link to={`/requests/${req.id}`}>
+      <Link to="/requests/$id" params={{ id: String(req.id) }}>
         <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
