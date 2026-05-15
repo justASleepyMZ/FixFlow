@@ -1,0 +1,280 @@
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { ArrowLeft, ImagePlus, Loader2, X, CalendarIcon, Sparkles } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { categories } from "@/data/mockData";
+import { Link } from "@tanstack/react-router";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
+
+const CreateRequest = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { t, tCategory } = useTranslation();
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
+  const [address, setAddress] = useState("");
+  const [budget, setBudget] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<{ min: number; max: number; recommended: number; reasoning: string } | null>(null);
+
+  const suggestPrice = async () => {
+    if (!title.trim() || !category) {
+      toast({ title: t("new.titleCatFirst"), variant: "destructive" });
+      return;
+    }
+    setSuggesting(true);
+    setSuggestion(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-price", {
+        body: { title: title.trim(), category, description: description.trim(), city: city.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setSuggestion(data);
+    } catch (err: any) {
+      toast({ title: t("new.aiError"), description: err.message, variant: "destructive" });
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  const handlePhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (photos.length + files.length > 5) {
+      toast({ title: t("new.maxPhotos"), variant: "destructive" });
+      return;
+    }
+    setPhotos((prev) => [...prev, ...files]);
+    files.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setPreviews((prev) => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(f);
+    });
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== idx));
+    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSubmit = async () => {
+    if (!user) { navigate({ to: "/login" } as any); return; }
+    if (!title.trim() || !description.trim() || !category) {
+      toast({ title: t("new.fillRequired"), variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Upload photos
+      const photoUrls: string[] = [];
+      for (const file of photos) {
+        const ext = file.name.split(".").pop();
+        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("request-photos")
+          .upload(path, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("request-photos").getPublicUrl(path);
+        photoUrls.push(urlData.publicUrl);
+      }
+
+      const { data, error } = await supabase
+        .from("service_requests")
+        .insert({
+          user_id: user.id,
+          title: title.trim(),
+          description: description.trim(),
+          category,
+          city: city.trim() || null,
+          district: district.trim() || null,
+          address: address.trim() || null,
+          budget: budget ? parseFloat(budget) : null,
+          photos: photoUrls,
+          desired_start_date: startDate ? format(startDate, "yyyy-MM-dd") : null,
+          desired_end_date: endDate ? format(endDate, "yyyy-MM-dd") : null,
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+      toast({ title: t("new.posted") });
+      navigate({ to: "/requests/$id", params: { id: data.id } } as any);
+    } catch (err: any) {
+      toast({ title: t("new.error"), description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (authLoading) return null;
+  if (!user) { navigate({ to: "/login" } as any); return null; }
+
+  return (
+    <div className="min-h-screen bg-gradient-surface">
+      <Navbar />
+      <div className="container max-w-2xl py-8">
+        <Link to="/requests">
+          <Button variant="ghost" size="sm" className="mb-4 gap-1">
+            <ArrowLeft className="h-4 w-4" /> {t("new.back")}
+          </Button>
+        </Link>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">{t("new.title")}</CardTitle>
+            <CardDescription>{t("new.subtitle")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="title">{t("new.titleLabel")}</Label>
+              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("new.titlePlaceholder")} maxLength={120} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">{t("new.category")}</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger><SelectValue placeholder={t("new.selectCategory")} /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.name} value={c.name}>{c.icon} {tCategory(c.name)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">{t("new.description")}</Label>
+              <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("new.descriptionPlaceholder")} rows={4} maxLength={2000} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t("new.photos")}</Label>
+              <div className="flex flex-wrap gap-3">
+                {previews.map((src, i) => (
+                  <div key={i} className="relative h-24 w-24 rounded-lg overflow-hidden border">
+                    <img src={src} alt="" className="h-full w-full object-cover" />
+                    <button onClick={() => removePhoto(i)} className="absolute top-1 right-1 rounded-full bg-background/80 p-0.5">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {photos.length < 5 && (
+                  <label className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors">
+                    <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotos} />
+                  </label>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">{t("new.city")}</Label>
+                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("new.cityPlaceholder")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="district">{t("new.district")}</Label>
+                <Input id="district" value={district} onChange={(e) => setDistrict(e.target.value)} placeholder={t("new.districtPlaceholder")} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">{t("new.address")}</Label>
+              <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("new.addressPlaceholder")} />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="budget">{t("new.budget")}</Label>
+                <Button type="button" variant="outline" size="sm" onClick={suggestPrice} disabled={suggesting} className="gap-1.5 h-8">
+                  {suggesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                  {t("new.aiSuggest")}
+                </Button>
+              </div>
+              <Input id="budget" type="number" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder={t("new.budgetPlaceholder")} />
+              {suggestion && (
+                <div className="rounded-lg border bg-accent/40 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <p className="text-xs text-muted-foreground">{t("new.aiEstimate")}</p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">{suggestion.min.toLocaleString()} – {suggestion.max.toLocaleString()}</span>
+                      <span className="font-semibold text-primary">{suggestion.recommended.toLocaleString()} ₸</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{suggestion.reasoning}</p>
+                  <Button type="button" size="sm" variant="secondary" className="h-7" onClick={() => setBudget(String(suggestion.recommended))}>
+                    {t("new.useAmount")} {suggestion.recommended.toLocaleString()} ₸
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t("new.timeRange")}</Label>
+              <p className="text-xs text-muted-foreground">{t("new.timeRangeHint")}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : t("new.startDate")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(d) => d < new Date(new Date().setHours(0,0,0,0))} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : t("new.endDate")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(d) => d < (startDate || new Date(new Date().setHours(0,0,0,0)))} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <Button onClick={handleSubmit} disabled={submitting} className="w-full gap-2" variant="hero">
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {submitting ? t("new.posting") : t("new.post")}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+
+import { createFileRoute } from "@tanstack/react-router";
+export const Route = createFileRoute("/requests/new")({ component: CreateRequest });

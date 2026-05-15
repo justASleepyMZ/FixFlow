@@ -1,0 +1,10 @@
+project_id = "uqtpejavffujsmvwdwsv"
+
+[functions.suggest-price]
+verify_jwt = false
+
+[functions.recommend-categories]
+verify_jwt = false
+
+[functions.support-chat]
+verify_jwt = false
